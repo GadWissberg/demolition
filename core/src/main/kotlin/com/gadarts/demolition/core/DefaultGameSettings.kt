@@ -5,6 +5,11 @@ package com.gadarts.demolition.core
  */
 object DefaultGameSettings {
     /**
+     * Whether to show physics collision shapes.
+     */
+    const val SHOW_COLLISION_SHAPES = false
+
+    /**
      * FPS MAX.
      */
     const val FPS_TARGET = 60
@@ -19,19 +24,6 @@ object DefaultGameSettings {
      */
     const val DEBUG_INPUT = true
 
-    /**
-     * Whether to show borders of widgets.
-     */
-    const val UI_DEBUG = false
 
-    /**
-     * Whether to play sounds.
-     */
-    const val SFX = true
-
-    /**
-     * Whether to show the Helicopter's propeller.
-     */
-    const val DISPLAY_PROPELLER = true
 }
 

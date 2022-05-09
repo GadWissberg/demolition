@@ -21,7 +21,7 @@ import com.gadarts.demolition.core.systems.physics.CollisionShapesDebugDrawing
 
 class PhysicsSystem : GameEntitySystem(), EntityListener {
     private lateinit var debugDrawer: DebugDrawer
-//    private lateinit var collisionWorld: btDiscreteDynamicsWorld
+    private lateinit var collisionWorld: btDiscreteDynamicsWorld
     private lateinit var broadPhase: btAxisSweep3
     private lateinit var ghostPairCallback: btGhostPairCallback
     private lateinit var solver: btSequentialImpulseConstraintSolver
@@ -34,40 +34,40 @@ class PhysicsSystem : GameEntitySystem(), EntityListener {
     }
 
     private fun initializePhysics() {
-//        collisionConfiguration = btDefaultCollisionConfiguration()
-//        dispatcher = btCollisionDispatcher(collisionConfiguration)
-//        solver = btSequentialImpulseConstraintSolver()
-//        initializeBroadPhase()
-//        initializeCollisionWorld()
-//        initializeDebug()
-//        commonData.debugDrawingMethod = object : CollisionShapesDebugDrawing {
-//            override fun drawCollisionShapes(camera: PerspectiveCamera) {
-//                debugDrawer.begin(camera)
-//                collisionWorld.debugDrawWorld()
-//                debugDrawer.end()
-//            }
-//        }
-//        engine.addEntityListener(this)
+        collisionConfiguration = btDefaultCollisionConfiguration()
+        dispatcher = btCollisionDispatcher(collisionConfiguration)
+        solver = btSequentialImpulseConstraintSolver()
+        initializeBroadPhase()
+        initializeCollisionWorld()
+        initializeDebug()
+        commonData.debugDrawingMethod = object : CollisionShapesDebugDrawing {
+            override fun drawCollisionShapes(camera: PerspectiveCamera) {
+                debugDrawer.begin(camera)
+                collisionWorld.debugDrawWorld()
+                debugDrawer.end()
+            }
+        }
+        engine.addEntityListener(this)
     }
 
     private fun initializeDebug() {
         debugDrawer = DebugDrawer()
         debugDrawer.debugMode = btIDebugDraw.DebugDrawModes.DBG_MAX_DEBUG_DRAW_MODE
-//        collisionWorld.debugDrawer = debugDrawer
+        collisionWorld.debugDrawer = debugDrawer
     }
 
     override fun entityAdded(entity: Entity?) {
         if (ComponentsMapper.physics.has(entity)) {
-            val btRigidBody: btRigidBody = ComponentsMapper.physics.get(entity).btRigidBody
-//            collisionWorld.addRigidBody(btRigidBody)
+            val btRigidBody: btRigidBody = ComponentsMapper.physics.get(entity).rigidBody
+            collisionWorld.addRigidBody(btRigidBody)
         }
     }
 
     override fun entityRemoved(entity: Entity?) {
         if (ComponentsMapper.physics.has(entity)) {
-            val body: btRigidBody = ComponentsMapper.physics[entity].btRigidBody
+            val body: btRigidBody = ComponentsMapper.physics[entity].rigidBody
             body.activationState = 0
-//            collisionWorld.removeCollisionObject(body)
+            collisionWorld.removeCollisionObject(body)
         }
     }
 
@@ -82,18 +82,18 @@ class PhysicsSystem : GameEntitySystem(), EntityListener {
     override fun resume(delta: Long) {
     }
 
-//    private fun initializeCollisionWorld() {
-//        collisionWorld = btDiscreteDynamicsWorld(
-//            dispatcher,
-//            broadPhase,
-//            solver,
-//            collisionConfiguration
-//        )
-//        collisionWorld.gravity = Vector3(0F, -9.8f, 0F)
-//    }
+    private fun initializeCollisionWorld() {
+        collisionWorld = btDiscreteDynamicsWorld(
+            dispatcher,
+            broadPhase,
+            solver,
+            collisionConfiguration
+        )
+        collisionWorld.gravity = Vector3(0F, -9.8f, 0F)
+    }
 
     override fun update(deltaTime: Float) {
-//        collisionWorld.stepSimulation(deltaTime, 5, 1f / DefaultGameSettings.FPS_TARGET)
+        collisionWorld.stepSimulation(deltaTime, 5, 1f / DefaultGameSettings.FPS_TARGET)
     }
 
     override fun dispose() {
@@ -102,7 +102,7 @@ class PhysicsSystem : GameEntitySystem(), EntityListener {
         dispatcher.dispose()
         ghostPairCallback.dispose()
         broadPhase.dispose()
-//        collisionWorld.dispose()
+        collisionWorld.dispose()
         debugDrawer.dispose()
     }
 

@@ -4,10 +4,10 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.physics.bullet.collision.btBroadphaseProxy
 import com.badlogic.gdx.physics.bullet.collision.btConvexShape
-import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody
 import com.gadarts.demolition.core.components.ModelInstanceComponent
 import com.gadarts.demolition.core.components.PhysicsComponent
 
@@ -36,18 +36,19 @@ class EntityBuilder private constructor() {
         return result!!
     }
 
-    fun addPhysicsComponent(collisionShape: btConvexShape): EntityBuilder {
+    fun addPhysicsComponent(
+        collisionShape: btConvexShape,
+        transform: Matrix4? = null,
+        mass: Float = 0F,
+        collisionFilterFlag: Int = btBroadphaseProxy.CollisionFilterGroups.StaticFilter
+    ): EntityBuilder {
         val component = engine.createComponent(PhysicsComponent::class.java)
-        val info = btRigidBody.btRigidBodyConstructionInfo(
-            0F,
-            null,
-            collisionShape
+        component.init(
+            collisionShape,
+            mass,
+            transform,
+            collisionFilterFlag
         )
-        val btRigidBody = btRigidBody(info)
-        info.dispose()
-        btRigidBody.contactCallbackFlag = btBroadphaseProxy.CollisionFilterGroups.StaticFilter
-        btRigidBody.userData = entity
-        component.replaceRigidBody(btRigidBody)
         entity!!.add(component)
         return instance
     }
@@ -65,7 +66,7 @@ class EntityBuilder private constructor() {
 
         fun initialize(engine: PooledEngine) {
             Companion.engine = engine
-            instance =EntityBuilder()
+            instance = EntityBuilder()
         }
     }
 }

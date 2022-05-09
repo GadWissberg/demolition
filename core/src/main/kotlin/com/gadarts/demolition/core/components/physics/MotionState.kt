@@ -4,7 +4,7 @@ import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState
 
 class MotionState : btMotionState() {
-    private val transformObject: Matrix4? = null
+    var transformObject: Matrix4? = null
     override fun getWorldTransform(worldTrans: Matrix4) {
         worldTrans.set(transformObject)
     }

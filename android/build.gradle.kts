@@ -15,7 +15,7 @@ android {
     }
     defaultConfig {
         val appVersion: String by project
-        applicationId = "com.gadarts.helicopter"
+        applicationId = "com.gadarts.demolition"
         minSdk = 22
         targetSdk = 30
         versionCode = appVersion.split('.').joinToString("") { it.padStart(2, '0') }.toInt()

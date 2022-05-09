@@ -32,7 +32,7 @@ class GamePlayScreen(
 
     private fun addSystems(data: CommonData) {
         addSystem(InputSystem(), data)
-//        addSystem(PhysicsSystem(), data)
+        addSystem(PhysicsSystem(), data)
         addSystem(MapSystem(), data)
         addSystem(RenderSystem(), data)
         addSystem(CameraSystem(), data)

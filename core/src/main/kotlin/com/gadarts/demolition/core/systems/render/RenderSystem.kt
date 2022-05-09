@@ -13,6 +13,7 @@ import com.badlogic.gdx.math.Quaternion
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
+import com.gadarts.demolition.core.DefaultGameSettings
 import com.gadarts.demolition.core.assets.GameAssetManager
 import com.gadarts.demolition.core.components.ComponentsMapper
 import com.gadarts.demolition.core.components.GroundComponent
@@ -38,6 +39,7 @@ class RenderSystem : GameEntitySystem(), Disposable {
     }
 
     private fun renderCollisionShapes() {
+        if (!DefaultGameSettings.SHOW_COLLISION_SHAPES) return
         val debugDrawingMethod: CollisionShapesDebugDrawing? = commonData.debugDrawingMethod
         debugDrawingMethod?.drawCollisionShapes(commonData.camera)
     }
