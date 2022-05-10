@@ -21,7 +21,6 @@ import com.gadarts.demolition.core.systems.physics.CollisionShapesDebugDrawing
 
 class PhysicsSystem : GameEntitySystem(), EntityListener {
     private lateinit var debugDrawer: DebugDrawer
-    private lateinit var collisionWorld: btDiscreteDynamicsWorld
     private lateinit var broadPhase: btAxisSweep3
     private lateinit var ghostPairCallback: btGhostPairCallback
     private lateinit var solver: btSequentialImpulseConstraintSolver
@@ -43,7 +42,7 @@ class PhysicsSystem : GameEntitySystem(), EntityListener {
         commonData.debugDrawingMethod = object : CollisionShapesDebugDrawing {
             override fun drawCollisionShapes(camera: PerspectiveCamera) {
                 debugDrawer.begin(camera)
-                collisionWorld.debugDrawWorld()
+                commonData.collisionWorld!!.debugDrawWorld()
                 debugDrawer.end()
             }
         }
@@ -53,13 +52,13 @@ class PhysicsSystem : GameEntitySystem(), EntityListener {
     private fun initializeDebug() {
         debugDrawer = DebugDrawer()
         debugDrawer.debugMode = btIDebugDraw.DebugDrawModes.DBG_MAX_DEBUG_DRAW_MODE
-        collisionWorld.debugDrawer = debugDrawer
+        commonData.collisionWorld!!.debugDrawer = debugDrawer
     }
 
     override fun entityAdded(entity: Entity?) {
         if (ComponentsMapper.physics.has(entity)) {
             val btRigidBody: btRigidBody = ComponentsMapper.physics.get(entity).rigidBody
-            collisionWorld.addRigidBody(btRigidBody)
+            commonData.collisionWorld!!.addRigidBody(btRigidBody)
         }
     }
 
@@ -67,7 +66,7 @@ class PhysicsSystem : GameEntitySystem(), EntityListener {
         if (ComponentsMapper.physics.has(entity)) {
             val body: btRigidBody = ComponentsMapper.physics[entity].rigidBody
             body.activationState = 0
-            collisionWorld.removeCollisionObject(body)
+            commonData.collisionWorld!!.removeCollisionObject(body)
         }
     }
 
@@ -83,17 +82,21 @@ class PhysicsSystem : GameEntitySystem(), EntityListener {
     }
 
     private fun initializeCollisionWorld() {
-        collisionWorld = btDiscreteDynamicsWorld(
+        commonData.collisionWorld = btDiscreteDynamicsWorld(
             dispatcher,
             broadPhase,
             solver,
             collisionConfiguration
         )
-        collisionWorld.gravity = Vector3(0F, -9.8f, 0F)
+        commonData.collisionWorld!!.gravity = Vector3(0F, -9.8f, 0F)
     }
 
     override fun update(deltaTime: Float) {
-        collisionWorld.stepSimulation(deltaTime, 5, 1f / DefaultGameSettings.FPS_TARGET)
+        commonData.collisionWorld!!.stepSimulation(
+            deltaTime,
+            5,
+            1f / DefaultGameSettings.FPS_TARGET
+        )
     }
 
     override fun dispose() {
@@ -102,7 +105,7 @@ class PhysicsSystem : GameEntitySystem(), EntityListener {
         dispatcher.dispose()
         ghostPairCallback.dispose()
         broadPhase.dispose()
-        collisionWorld.dispose()
+        commonData.collisionWorld?.dispose()
         debugDrawer.dispose()
     }
 
