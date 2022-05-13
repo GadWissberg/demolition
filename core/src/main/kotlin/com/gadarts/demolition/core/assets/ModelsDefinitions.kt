@@ -5,7 +5,9 @@ import com.badlogic.gdx.graphics.g3d.Model
 
 enum class ModelsDefinitions(fileNames: Int = 1) : AssetDefinition<Model> {
 
-    ;
+    CRANE_WHEELS,
+    BODY,
+    CRANE;
 
     private val paths = ArrayList<String>()
     private val pathFormat = "models/%s.g3dj"

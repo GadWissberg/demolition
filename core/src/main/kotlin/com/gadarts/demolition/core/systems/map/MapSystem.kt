@@ -1,4 +1,4 @@
-package com.gadarts.demolition.core.systems
+package com.gadarts.demolition.core.systems.map
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.graphics.Color
@@ -16,13 +16,16 @@ import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape
 import com.badlogic.gdx.physics.bullet.collision.btSphereShape
 import com.badlogic.gdx.physics.bullet.dynamics.btPoint2PointConstraint
 import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint
-import com.badlogic.gdx.utils.TimeUtils
 import com.gadarts.demolition.core.EntityBuilder
 import com.gadarts.demolition.core.assets.GameAssetManager
+import com.gadarts.demolition.core.assets.ModelsDefinitions
 import com.gadarts.demolition.core.components.ComponentsMapper
+import com.gadarts.demolition.core.systems.GameEntitySystem
+import com.gadarts.demolition.core.systems.Notifier
+import com.gadarts.demolition.core.systems.SystemEventsSubscriber
 
+class MapSystem : GameEntitySystem(), Notifier<MapSystemEventsSubscriber> {
 
-class MapSystem : GameEntitySystem() {
     private var direction = Vector3()
     private var lastChange: Long = 0
     private lateinit var holder: Entity
@@ -31,13 +34,37 @@ class MapSystem : GameEntitySystem() {
     private lateinit var chainModel: Model
     private lateinit var ballModel: Model
     private lateinit var groundModel: Model
-
+    override val subscribers: HashSet<MapSystemEventsSubscriber> = HashSet()
     override fun initialize(am: GameAssetManager) {
         val modelBuilder = ModelBuilder()
         addGround(modelBuilder)
-        val chain5 = addChains(modelBuilder)
-        createHolder(modelBuilder, chain5)
-        constraints.forEach { commonData.collisionWorld!!.addConstraint(it, true) }
+        addPlayer()
+//        val chain5 = addChains(modelBuilder)
+//        createHolder(modelBuilder, chain5)
+//        constraints.forEach { commonData.collisionWorld!!.addConstraint(it, true) }
+    }
+
+    private fun addPlayer() {
+        addPlayerWheels()
+        addPlayerBody()
+        EntityBuilder.begin().addModelInstanceComponent(
+            assetsManager.getAssetByDefinition(ModelsDefinitions.CRANE),
+            auxVector_1.set(CRANE_OFFSET_X, CRANE_OFFSET_Y, 0F)
+        ).finishAndAddToEngine()
+    }
+
+    private fun addPlayerBody() {
+        EntityBuilder.begin().addModelInstanceComponent(
+            assetsManager.getAssetByDefinition(ModelsDefinitions.BODY),
+            auxVector_1.set(0F, BODY_OFFSET_Y, 0F)
+        ).finishAndAddToEngine()
+    }
+
+    private fun addPlayerWheels() {
+        EntityBuilder.begin().addModelInstanceComponent(
+            assetsManager.getAssetByDefinition(ModelsDefinitions.CRANE_WHEELS),
+            auxVector_1.set(0F, WHEELS_OFFSET_Y, 0F)
+        ).finishAndAddToEngine()
     }
 
     private fun addChains(modelBuilder: ModelBuilder): Entity {
@@ -151,16 +178,16 @@ class MapSystem : GameEntitySystem() {
     }
 
     override fun update(deltaTime: Float) {
-        if (TimeUtils.timeSinceMillis(lastChange) > 2000F) {
-            lastChange = TimeUtils.millis()
-            direction.setToRandomDirection()
-        }
-        val motionState = ComponentsMapper.physics.get(holder).rigidBody.motionState
-        val modelInstance = ComponentsMapper.modelInstance.get(holder).modelInstance
-        motionState.setWorldTransform(
-            auxMatrix.set(modelInstance.transform)
-                .translate(auxVector_1.set(direction).scl(deltaTime))
-        )
+//        if (TimeUtils.timeSinceMillis(lastChange) > 2000F) {
+//            lastChange = TimeUtils.millis()
+//            direction.setToRandomDirection()
+//        }
+//        val motionState = ComponentsMapper.physics.get(holder).rigidBody.motionState
+//        val modelInstance = ComponentsMapper.modelInstance.get(holder).modelInstance
+//        motionState.setWorldTransform(
+//            auxMatrix.set(modelInstance.transform)
+//                .translate(auxVector_1.set(direction).scl(deltaTime))
+//        )
     }
 
     private fun createGroundModel(modelBuilder: ModelBuilder) {
@@ -187,5 +214,9 @@ class MapSystem : GameEntitySystem() {
         val auxVector_1 = Vector3()
         val auxVector_2 = Vector3()
         val auxMatrix = Matrix4()
+        const val WHEELS_OFFSET_Y = 0.04F;
+        const val BODY_OFFSET_Y = 0.25F;
+        const val CRANE_OFFSET_X = -0.6F;
+        const val CRANE_OFFSET_Y = 1F;
     }
 }

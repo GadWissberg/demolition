@@ -19,15 +19,17 @@ import com.gadarts.demolition.core.components.ComponentsMapper
 import com.gadarts.demolition.core.components.GroundComponent
 import com.gadarts.demolition.core.components.ModelInstanceComponent
 import com.gadarts.demolition.core.systems.GameEntitySystem
+import com.gadarts.demolition.core.systems.Notifier
 import com.gadarts.demolition.core.systems.physics.CollisionShapesDebugDrawing
 import kotlin.math.max
 
-class RenderSystem : GameEntitySystem(), Disposable {
+class RenderSystem : GameEntitySystem(), Disposable, Notifier<RenderSystemEventsSubscriber> {
+
 
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelInstanceEntities: ImmutableArray<Entity>
     private var axisModelHandler = AxisModelHandler()
-
+    override val subscribers: HashSet<RenderSystemEventsSubscriber> = HashSet()
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)
         modelInstanceEntities = engine!!.getEntitiesFor(
@@ -95,7 +97,6 @@ class RenderSystem : GameEntitySystem(), Disposable {
     override fun dispose() {
         modelBatch.dispose()
     }
-
 
     companion object {
         val auxVector3_1 = Vector3()

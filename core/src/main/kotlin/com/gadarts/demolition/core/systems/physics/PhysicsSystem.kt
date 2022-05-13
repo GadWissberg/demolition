@@ -1,4 +1,4 @@
-package com.gadarts.demolition.core.systems
+package com.gadarts.demolition.core.systems.physics
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntityListener
@@ -17,15 +17,18 @@ import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw
 import com.gadarts.demolition.core.DefaultGameSettings
 import com.gadarts.demolition.core.assets.GameAssetManager
 import com.gadarts.demolition.core.components.ComponentsMapper
-import com.gadarts.demolition.core.systems.physics.CollisionShapesDebugDrawing
+import com.gadarts.demolition.core.systems.GameEntitySystem
+import com.gadarts.demolition.core.systems.Notifier
 
-class PhysicsSystem : GameEntitySystem(), EntityListener {
+class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystemEventsSubscriber> {
+
     private lateinit var debugDrawer: DebugDrawer
     private lateinit var broadPhase: btAxisSweep3
     private lateinit var ghostPairCallback: btGhostPairCallback
     private lateinit var solver: btSequentialImpulseConstraintSolver
     private lateinit var dispatcher: btCollisionDispatcher
     private lateinit var collisionConfiguration: btDefaultCollisionConfiguration
+    override val subscribers: HashSet<PhysicsSystemEventsSubscriber> = HashSet()
 
     override fun initialize(am: GameAssetManager) {
         Bullet.init()
@@ -108,5 +111,6 @@ class PhysicsSystem : GameEntitySystem(), EntityListener {
         commonData.collisionWorld?.dispose()
         debugDrawer.dispose()
     }
+
 
 }

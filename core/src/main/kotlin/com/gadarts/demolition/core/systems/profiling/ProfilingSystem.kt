@@ -10,13 +10,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.gadarts.demolition.core.DefaultGameSettings
 import com.gadarts.demolition.core.assets.GameAssetManager
 import com.gadarts.demolition.core.systems.GameEntitySystem
+import com.gadarts.demolition.core.systems.Notifier
 
-class ProfilingSystem : GameEntitySystem() {
+class ProfilingSystem : GameEntitySystem(), Notifier<ProfilingSystemEventsSubscriber> {
 
     private val stringBuilder: StringBuilder = StringBuilder()
     private lateinit var glProfiler: GLProfiler
     private lateinit var label: Label
-
+    override val subscribers: HashSet<ProfilingSystemEventsSubscriber> = HashSet()
     override fun initialize(am: GameAssetManager) {
 
     }

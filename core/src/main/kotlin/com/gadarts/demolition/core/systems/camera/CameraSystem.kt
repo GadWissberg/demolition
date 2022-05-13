@@ -4,8 +4,9 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.math.Vector3
 import com.gadarts.demolition.core.assets.GameAssetManager
 import com.gadarts.demolition.core.systems.GameEntitySystem
+import com.gadarts.demolition.core.systems.Notifier
 
-class CameraSystem : GameEntitySystem() {
+class CameraSystem : GameEntitySystem(), Notifier<CameraSystemEventsSubscriber> {
 
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
@@ -31,15 +32,18 @@ class CameraSystem : GameEntitySystem() {
         commonData.camera.near = NEAR
         commonData.camera.far = FAR
         commonData.camera.update()
-        commonData.camera.position.set(0F, INITIAL_Y, INITIAL_Z)
+        commonData.camera.position.set(INITIAL_X, INITIAL_Y, 0F)
         commonData.camera.rotate(Vector3.X, -45F)
+        commonData.camera.rotate(Vector3.Y, 90F)
     }
 
     companion object {
         const val NEAR = 0.1F
         const val FAR = 300F
         const val INITIAL_Y = 7F
-        const val INITIAL_Z = 5F
+        const val INITIAL_X = 6F
     }
+
+    override val subscribers: HashSet<CameraSystemEventsSubscriber> = HashSet()
 
 }

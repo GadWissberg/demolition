@@ -1,12 +1,17 @@
-package com.gadarts.demolition.core.systems
+package com.gadarts.demolition.core.systems.input
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.gadarts.demolition.core.DefaultGameSettings
 import com.gadarts.demolition.core.assets.GameAssetManager
+import com.gadarts.demolition.core.systems.GameEntitySystem
+import com.gadarts.demolition.core.systems.Notifier
 
-class InputSystem : GameEntitySystem() {
+class InputSystem : GameEntitySystem(), Notifier<InputSystemEventsSubscriber> {
+
     private lateinit var debugInput: CameraInputController
+    override val subscribers: HashSet<InputSystemEventsSubscriber> = HashSet()
 
     override fun initialize(am: GameAssetManager) {
         initializeInput()
@@ -18,16 +23,15 @@ class InputSystem : GameEntitySystem() {
             debugInput.autoUpdate = true
             Gdx.input.inputProcessor = debugInput
         } else {
-            Gdx.input.inputProcessor = commonData.stage
+            Gdx.input.inputProcessor = InputMultiplexer()
         }
+        subscribers.forEach{it.onInputInitialized()}
     }
 
     override fun resume(delta: Long) {
-        TODO("Not yet implemented")
     }
 
     override fun dispose() {
-        TODO("Not yet implemented")
     }
 
 }

@@ -7,7 +7,17 @@ import com.gadarts.demolition.core.EntityBuilder
 import com.gadarts.demolition.core.assets.GameAssetManager
 import com.gadarts.demolition.core.systems.*
 import com.gadarts.demolition.core.systems.camera.CameraSystem
+import com.gadarts.demolition.core.systems.camera.CameraSystemEventsSubscriber
+import com.gadarts.demolition.core.systems.input.InputSystem
+import com.gadarts.demolition.core.systems.input.InputSystemEventsSubscriber
+import com.gadarts.demolition.core.systems.map.MapSystem
+import com.gadarts.demolition.core.systems.map.MapSystemEventsSubscriber
+import com.gadarts.demolition.core.systems.physics.PhysicsSystem
+import com.gadarts.demolition.core.systems.physics.PhysicsSystemEventsSubscriber
+import com.gadarts.demolition.core.systems.profiling.ProfilingSystem
+import com.gadarts.demolition.core.systems.profiling.ProfilingSystemEventsSubscriber
 import com.gadarts.demolition.core.systems.render.RenderSystem
+import com.gadarts.demolition.core.systems.render.RenderSystemEventsSubscriber
 
 
 /**
@@ -21,24 +31,37 @@ class GamePlayScreen(
     private var pauseTime: Long = 0
     private lateinit var data: CommonData
     private lateinit var engine: PooledEngine
+    private val systems: Map<Class<out SystemEventsSubscriber>, Class<out GameEntitySystem>> =
+        mapOf(
+            CameraSystemEventsSubscriber::class.java to CameraSystem::class.java,
+            PhysicsSystemEventsSubscriber::class.java to PhysicsSystem::class.java,
+            InputSystemEventsSubscriber::class.java to InputSystem::class.java,
+            RenderSystemEventsSubscriber::class.java to RenderSystem::class.java,
+            ProfilingSystemEventsSubscriber::class.java to ProfilingSystem::class.java,
+            MapSystemEventsSubscriber::class.java to MapSystem::class.java,
+        )
 
     override fun show() {
         this.engine = PooledEngine()
         EntityBuilder.initialize(engine)
         data = CommonData(assetsManager)
-        addSystems(data)
+        addSystems()
         engine.systems.forEach { (it as GameEntitySystem).initialize(assetsManager) }
     }
 
-    private fun addSystems(data: CommonData) {
-        addSystem(InputSystem(), data)
-        addSystem(PhysicsSystem(), data)
-        addSystem(MapSystem(), data)
-        addSystem(RenderSystem(), data)
-        addSystem(CameraSystem(), data)
+    private fun addSystems() {
+        systems.forEach { addSystem(it.value.newInstance()) }
+        engine.systems.forEach {
+            it.javaClass.interfaces.forEach { interfaze ->
+                if (systems.containsKey(interfaze)) {
+                    val notifier = engine.getSystem(systems[interfaze]) as Notifier<*>
+                    notifier.subscribeForEvents(it as Nothing)
+                }
+            }
+        }
     }
 
-    private fun addSystem(system: GameEntitySystem, data: CommonData) {
+    private fun addSystem(system: GameEntitySystem) {
         system.commonData = data
         system.assetsManager = assetsManager
         engine.addSystem(system)
@@ -67,6 +90,5 @@ class GamePlayScreen(
         engine.systems.forEach { (it as GameEntitySystem).dispose() }
         data.dispose()
     }
-
 
 }
