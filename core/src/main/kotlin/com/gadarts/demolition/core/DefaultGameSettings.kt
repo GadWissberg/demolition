@@ -7,7 +7,7 @@ object DefaultGameSettings {
     /**
      * Whether to show physics collision shapes.
      */
-    const val SHOW_COLLISION_SHAPES = false
+    const val SHOW_COLLISION_SHAPES = true
 
     /**
      * FPS MAX.
@@ -22,7 +22,7 @@ object DefaultGameSettings {
     /**
      * Whether to enable the debug input to look around.
      */
-    const val DEBUG_INPUT = false
+    const val DEBUG_INPUT = true
 
 
 }

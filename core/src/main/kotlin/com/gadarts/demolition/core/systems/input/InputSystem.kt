@@ -25,7 +25,7 @@ class InputSystem : GameEntitySystem(), Notifier<InputSystemEventsSubscriber> {
         } else {
             Gdx.input.inputProcessor = InputMultiplexer()
         }
-        subscribers.forEach{it.onInputInitialized()}
+        subscribers.forEach { it.onInputInitialized() }
     }
 
     override fun resume(delta: Long) {

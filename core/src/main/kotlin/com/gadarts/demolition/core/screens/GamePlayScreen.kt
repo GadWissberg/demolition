@@ -14,6 +14,8 @@ import com.gadarts.demolition.core.systems.map.MapSystem
 import com.gadarts.demolition.core.systems.map.MapSystemEventsSubscriber
 import com.gadarts.demolition.core.systems.physics.PhysicsSystem
 import com.gadarts.demolition.core.systems.physics.PhysicsSystemEventsSubscriber
+import com.gadarts.demolition.core.systems.player.PlayerSystem
+import com.gadarts.demolition.core.systems.player.PlayerSystemEventsSubscriber
 import com.gadarts.demolition.core.systems.profiling.ProfilingSystem
 import com.gadarts.demolition.core.systems.profiling.ProfilingSystemEventsSubscriber
 import com.gadarts.demolition.core.systems.render.RenderSystem
@@ -27,7 +29,6 @@ class GamePlayScreen(
     private val assetsManager: GameAssetManager,
 ) : Screen {
 
-
     private var pauseTime: Long = 0
     private lateinit var data: CommonData
     private lateinit var engine: PooledEngine
@@ -39,6 +40,7 @@ class GamePlayScreen(
             RenderSystemEventsSubscriber::class.java to RenderSystem::class.java,
             ProfilingSystemEventsSubscriber::class.java to ProfilingSystem::class.java,
             MapSystemEventsSubscriber::class.java to MapSystem::class.java,
+            PlayerSystemEventsSubscriber::class.java to PlayerSystem::class.java,
         )
 
     override fun show() {
@@ -54,8 +56,9 @@ class GamePlayScreen(
         engine.systems.forEach {
             it.javaClass.interfaces.forEach { interfaze ->
                 if (systems.containsKey(interfaze)) {
-                    val notifier = engine.getSystem(systems[interfaze]) as Notifier<*>
-                    notifier.subscribeForEvents(it as Nothing)
+                    val system = engine.getSystem(systems[interfaze])
+                    val notifier = system as Notifier<SystemEventsSubscriber>
+                    notifier.subscribeForEvents(it as GameEntitySystem)
                 }
             }
         }
