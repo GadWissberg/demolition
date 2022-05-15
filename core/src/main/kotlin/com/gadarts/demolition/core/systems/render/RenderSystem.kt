@@ -55,7 +55,7 @@ class RenderSystem : GameEntitySystem(), Disposable, Notifier<RenderSystemEvents
 
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
-        resetDisplay(Color.BLACK)
+        resetDisplay(backgroundColor)
         renderModels()
         renderCollisionShapes()
     }
@@ -101,8 +101,8 @@ class RenderSystem : GameEntitySystem(), Disposable, Notifier<RenderSystemEvents
     companion object {
         val auxVector3_1 = Vector3()
         val auxVector3_2 = Vector3()
-        val auxQuat = Quaternion()
         val auxBox = BoundingBox()
+        val backgroundColor: Color = Color.WHITE
     }
 
 }

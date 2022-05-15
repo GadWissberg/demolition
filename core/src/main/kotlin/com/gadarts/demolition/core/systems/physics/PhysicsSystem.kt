@@ -17,10 +17,15 @@ import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw
 import com.gadarts.demolition.core.DefaultGameSettings
 import com.gadarts.demolition.core.assets.GameAssetManager
 import com.gadarts.demolition.core.components.ComponentsMapper
+import com.gadarts.demolition.core.systems.CommonData.Companion.CHAIN_COLLISION_SHAPE_HEIGHT
+import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_CONST_REL_POINT_X
+import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_CONST_REL_POINT_Y
 import com.gadarts.demolition.core.systems.GameEntitySystem
 import com.gadarts.demolition.core.systems.Notifier
+import com.gadarts.demolition.core.systems.player.PlayerSystemEventsSubscriber
 
-class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystemEventsSubscriber> {
+class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystemEventsSubscriber>,
+    PlayerSystemEventsSubscriber {
 
     private lateinit var debugDrawer: DebugDrawer
     private lateinit var broadPhase: btAxisSweep3
@@ -29,7 +34,7 @@ class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystem
     private lateinit var dispatcher: btCollisionDispatcher
     private lateinit var collisionConfiguration: btDefaultCollisionConfiguration
     override val subscribers: HashSet<PhysicsSystemEventsSubscriber> = HashSet()
-
+    private val constraints = ArrayList<PhysicsConstraint>()
     override fun initialize(am: GameAssetManager) {
         Bullet.init()
         initializePhysics()
@@ -54,7 +59,7 @@ class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystem
 
     private fun initializeDebug() {
         debugDrawer = DebugDrawer()
-        debugDrawer.debugMode = btIDebugDraw.DebugDrawModes.DBG_MAX_DEBUG_DRAW_MODE
+        debugDrawer.debugMode = btIDebugDraw.DebugDrawModes.DBG_DrawWireframe
         commonData.collisionWorld!!.debugDrawer = debugDrawer
     }
 
@@ -110,7 +115,73 @@ class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystem
         broadPhase.dispose()
         commonData.collisionWorld?.dispose()
         debugDrawer.dispose()
+        constraints.forEach { it.dispose() }
+    }
+
+    private fun addConstraintBetweenCraneAndChain(chain1: Entity, crane: Entity) {
+        constraints.add(
+            PhysicsConstraint(
+                ComponentsMapper.physics.get(crane).rigidBody,
+                ComponentsMapper.physics.get(chain1).rigidBody,
+                auxVector1.set(
+                    CRANE_CONST_REL_POINT_X,
+                    CRANE_CONST_REL_POINT_Y, 0F
+                ),
+                auxVector2.set(0F, CHAIN_COLLISION_SHAPE_HEIGHT/3F, 0F),
+                true
+            )
+        )
+    }
+
+    private fun addConstraintBetweenChains(
+        chain1: Entity,
+        chain2: Entity
+    ) {
+        constraints.add(
+            PhysicsConstraint(
+                ComponentsMapper.physics.get(chain1).rigidBody,
+                ComponentsMapper.physics.get(chain2).rigidBody,
+                auxVector1.set(0F, -CHAIN_COLLISION_SHAPE_HEIGHT/2F, 0F),
+                auxVector2.set(0F, CHAIN_COLLISION_SHAPE_HEIGHT / 2F, 0F),
+                true
+            )
+        )
     }
 
 
+    override fun onPlayerAdded(chains: List<Entity>, crane: Entity, ball: Entity) {
+        addConstraintBetweenCraneAndChain(chains[0], crane)
+        addConstraintBetweenChains(chains[0], chains[1])
+        addConstraintBetweenChains(chains[1], chains[2])
+        addConstraintBetweenChains(chains[2], chains[3])
+        addConstraintBetweenChains(chains[3], chains[4])
+        addConstraintBetweenChainAndBall(chains[4], ball)
+        addConstraints()
+    }
+
+    private fun addConstraintBetweenChainAndBall(chain: Entity, ball: Entity) {
+        constraints.add(
+            PhysicsConstraint(
+                ComponentsMapper.physics.get(chain).rigidBody,
+                ComponentsMapper.physics.get(ball).rigidBody,
+                auxVector1.set(0F, -CHAIN_COLLISION_SHAPE_HEIGHT, 0F),
+                auxVector2.set(0F, 0.25F, 0F),
+                true
+            )
+        )
+    }
+
+    private fun addConstraints() {
+        constraints.forEach {
+            commonData.collisionWorld!!.addConstraint(
+                it,
+                it.disableCollisionsBetweenLinkedBodies
+            )
+        }
+    }
+
+    companion object {
+        val auxVector1 = Vector3()
+        val auxVector2 = Vector3()
+    }
 }

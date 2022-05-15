@@ -13,11 +13,8 @@ import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.physics.bullet.collision.btBoxShape
 import com.badlogic.gdx.physics.bullet.collision.btBroadphaseProxy
 import com.badlogic.gdx.physics.bullet.collision.btSphereShape
-import com.badlogic.gdx.physics.bullet.dynamics.btPoint2PointConstraint
-import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint
 import com.gadarts.demolition.core.EntityBuilder
 import com.gadarts.demolition.core.assets.GameAssetManager
-import com.gadarts.demolition.core.components.ComponentsMapper
 import com.gadarts.demolition.core.systems.GameEntitySystem
 import com.gadarts.demolition.core.systems.Notifier
 
@@ -36,7 +33,6 @@ class MapSystem : GameEntitySystem(), Notifier<MapSystemEventsSubscriber> {
         addGround(modelBuilder)
 //        val chain5 = addChains(modelBuilder)
 //        createHolder(modelBuilder, chain5)
-//        constraints.forEach { commonData.collisionWorld!!.addConstraint(it, true) }
     }
 
 
@@ -132,14 +128,13 @@ class MapSystem : GameEntitySystem(), Notifier<MapSystemEventsSubscriber> {
         groundModel.dispose()
         ballModel.dispose()
         chainModel.dispose()
-//        constraints.forEach { it.dispose() }
         holderModel.dispose()
     }
 
     companion object {
-        const val GROUND_SIZE = 10F
-        val auxVector1 = Vector3()
-        val auxVector2 = Vector3()
-        val auxMatrix = Matrix4()
+        private const val GROUND_SIZE = 10F
+        private val auxVector1 = Vector3()
+        private val auxVector2 = Vector3()
+        private val auxMatrix = Matrix4()
     }
 }

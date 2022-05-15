@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.physics.bullet.collision.btBroadphaseProxy
+import com.badlogic.gdx.physics.bullet.collision.btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT
+import com.badlogic.gdx.physics.bullet.collision.btCollisionObject.CollisionFlags.CF_STATIC_OBJECT
 import com.badlogic.gdx.physics.bullet.collision.btConvexShape
 import com.gadarts.demolition.core.components.ModelInstanceComponent
 import com.gadarts.demolition.core.components.PhysicsComponent
@@ -40,7 +42,7 @@ class EntityBuilder private constructor() {
         collisionShape: btConvexShape,
         transform: Matrix4? = null,
         mass: Float = 0F,
-        collisionFilterFlag: Int = btBroadphaseProxy.CollisionFilterGroups.StaticFilter
+        collisionFilterFlag: Int = CF_KINEMATIC_OBJECT
     ): EntityBuilder {
         val component = engine.createComponent(PhysicsComponent::class.java)
         component.init(

@@ -46,7 +46,7 @@ class GamePlayScreen(
     override fun show() {
         this.engine = PooledEngine()
         EntityBuilder.initialize(engine)
-        data = CommonData(assetsManager)
+        data = CommonData()
         addSystems()
         engine.systems.forEach { (it as GameEntitySystem).initialize(assetsManager) }
     }
