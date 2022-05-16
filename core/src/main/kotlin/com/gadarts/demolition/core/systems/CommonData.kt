@@ -26,9 +26,9 @@ class CommonData() : Disposable {
         const val FOV = 67F
         const val CHAIN_COLLISION_SHAPE_RADIUS = 0.03F
         const val CHAIN_COLLISION_SHAPE_HEIGHT = 0.15F
-        const val CRANE_SHAPE_WIDTH = 1F
+        const val CRANE_SHAPE_WIDTH = 0.9F
         const val CRANE_SHAPE_HEIGHT = 0.05F
-        const val CRANE_SHAPE_DEPTH = 0.12F
+        const val CRANE_SHAPE_DEPTH = 0.08F
         const val CRANE_CONST_REL_POINT_X = CRANE_SHAPE_WIDTH - 0.1F
         const val CRANE_CONST_REL_POINT_Y = -0.01F
     }

@@ -36,6 +36,7 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
     private lateinit var player: Entity
     private val prevTouchPos = Vector2()
     override val subscribers: HashSet<PlayerSystemEventsSubscriber> = HashSet()
+
     override fun initialize(am: GameAssetManager) {
         addPlayer()
     }
@@ -60,11 +61,11 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
     }
 
     private fun addChains(): List<Entity> {
-        val chain1 = addChain(auxVector1.set(CRANE_CONST_REL_POINT_X, CRANE_CONST_REL_POINT_Y, 0F))
-        val chain2 = addChain(auxVector1.set(CRANE_CONST_REL_POINT_X, CRANE_CONST_REL_POINT_Y, 0F))
-        val chain3 = addChain(auxVector1.set(CRANE_CONST_REL_POINT_X, CRANE_CONST_REL_POINT_Y, 0F))
-        val chain4 = addChain(auxVector1.set(CRANE_CONST_REL_POINT_X, CRANE_CONST_REL_POINT_Y, 0F))
-        val chain5 = addChain(auxVector1.set(CRANE_CONST_REL_POINT_X, CRANE_CONST_REL_POINT_Y, 0F))
+        val chain1 = addChain(auxVector1.set(0F,1F,0F))
+        val chain2 = addChain(auxVector1.set(0F,1F,0F))
+        val chain3 = addChain(auxVector1.set(0F,1F,0F))
+        val chain4 = addChain(auxVector1.set(0F,1F,0F))
+        val chain5 = addChain(auxVector1.set(0F,1F,0F))
         return listOf(chain1, chain2, chain3, chain4, chain5)
     }
 
@@ -74,14 +75,18 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
         val modelInstance = ModelInstance(model)
         val ball = EntityBuilder.begin().addModelInstanceComponent(
             modelInstance,
-            auxVector1.set(0F, 3.5F, 0F)
+            auxVector1.set(0F, 1F, 0F)
         ).addPhysicsComponent(
             colShape,
             modelInstance.transform,
             80F,
             CF_CHARACTER_OBJECT
         ).finishAndAddToEngine()
-        ComponentsMapper.physics.get(ball).rigidBody.setDamping(0F, BALL_DAMPING)
+        val rigidBody = ComponentsMapper.physics.get(ball).rigidBody
+        rigidBody.setDamping(0F, BALL_DAMPING)
+        val motionState = rigidBody.motionState
+        motionState.getWorldTransform(auxMatrix1)
+        motionState.setWorldTransform(auxMatrix1.setToTranslation(0F,1F,0F))
         return ball
     }
 
@@ -106,7 +111,7 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
         crane = EntityBuilder.begin()
             .addModelInstanceComponent(
                 assetsManager.getAssetByDefinition(ModelsDefinitions.CRANE),
-                auxVector1.set(-CRANE_OFFSET_X, CRANE_OFFSET_Y, 0F)
+                auxVector1.set(-CRANE_MODEL_OFFSET_X, CRANE_MODEL_OFFSET_Y, 0F)
             )
             .addPhysicsComponent(
                 btBoxShape(
@@ -123,14 +128,13 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
 
     private fun placeCraneCollisionShape() {
         val motionState = ComponentsMapper.physics.get(crane).rigidBody.motionState
-        motionState.getWorldTransform(auxMatrix)
-        auxMatrix.rotate(Vector3.Z, CRANE_COL_SHAPE_INITIAL_ANGLE)
-            .translate(
-                CRANE_COL_SHAPE_INITIAL_POS_X,
-                CRANE_COL_SHAPE_INITIAL_POS_Y,
-                CRANE_COL_SHAPE_INITIAL_POS_Z
-            )
-        motionState.setWorldTransform(auxMatrix)
+        motionState.getWorldTransform(auxMatrix1)
+        auxMatrix1.translate(
+            CRANE_COL_SHAPE_INITIAL_POS_X,
+            CRANE_COL_SHAPE_INITIAL_POS_Y,
+            CRANE_COL_SHAPE_INITIAL_POS_Z
+        )
+        motionState.setWorldTransform(auxMatrix1)
     }
 
     private fun addPlayerBody() {
@@ -181,25 +185,28 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
 
     override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
         if (DefaultGameSettings.DEBUG_INPUT) return false
-        rotatePlayer(screenX, screenY)
+        handleRotation(screenX, screenY)
         return true
     }
 
-    private fun rotatePlayer(screenX: Int, screenY: Int) {
+    private fun handleRotation(screenX: Int, screenY: Int) {
+        rotatePlayerModel(screenX)
+        val motionState = ComponentsMapper.physics.get(crane).rigidBody.motionState
+        motionState.getWorldTransform(auxMatrix1)
+        auxMatrix1.translate(-CRANE_MODEL_OFFSET_X+0.4F, 0F, 0F)
+        auxMatrix1.rotate(Vector3.Y, (screenX - prevTouchPos.x) * ROTATION_SCALE)
+        auxMatrix1.translate(CRANE_MODEL_OFFSET_X-0.4F, 0F, 0F)
+        motionState.setWorldTransform(auxMatrix1)
+        prevTouchPos.set(screenX.toFloat(), screenY.toFloat())
+    }
+
+    private fun rotatePlayerModel(screenX: Int) {
         val playerModelIns = ComponentsMapper.modelInstance.get(player).modelInstance
         playerModelIns.transform.rotate(Vector3.Y, (screenX - prevTouchPos.x) * ROTATION_SCALE)
         val craneModelIns = ComponentsMapper.modelInstance.get(crane).modelInstance
-        craneModelIns.transform.translate(CRANE_OFFSET_X, 0F, 0F)
+        craneModelIns.transform.translate(CRANE_MODEL_OFFSET_X, 0F, 0F)
         craneModelIns.transform.rotate(Vector3.Y, (screenX - prevTouchPos.x) * ROTATION_SCALE)
-        craneModelIns.transform.translate(-CRANE_OFFSET_X, 0F, 0F)
-        val motionState = ComponentsMapper.physics.get(crane).rigidBody.motionState
-        motionState.getWorldTransform(auxMatrix)
-        auxMatrix.translate(-CRANE_OFFSET_X+0.4F, 0F, 0F)
-//        auxMatrix.setToRotation(Vector3.Z, CRANE_COL_SHAPE_INITIAL_ANGLE)
-        auxMatrix.rotate(Vector3.Y, (screenX - prevTouchPos.x) * ROTATION_SCALE)
-        auxMatrix.translate(CRANE_OFFSET_X-0.4F, 0F, 0F)
-        motionState.setWorldTransform(auxMatrix)
-        prevTouchPos.set(screenX.toFloat(), screenY.toFloat())
+        craneModelIns.transform.translate(-CRANE_MODEL_OFFSET_X, 0F, 0F)
     }
 
     override fun mouseMoved(screenX: Int, screenY: Int): Boolean {
@@ -213,14 +220,13 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
     companion object {
         private const val ROTATION_SCALE = 0.1F
         private val auxVector1 = Vector3()
-        private val auxMatrix = Matrix4()
+        private val auxMatrix1 = Matrix4()
         private const val WHEELS_OFFSET_Y = 0.04F
         private const val BODY_OFFSET_Y = 0.25F
-        private const val CRANE_OFFSET_X = 0.6F
-        private const val CRANE_OFFSET_Y = 1F
-        private const val CRANE_COL_SHAPE_INITIAL_ANGLE = 8F
-        private const val CRANE_COL_SHAPE_INITIAL_POS_X = 0.6F
-        private const val CRANE_COL_SHAPE_INITIAL_POS_Y = 2.9F
+        private const val CRANE_MODEL_OFFSET_X = 0.6F
+        private const val CRANE_MODEL_OFFSET_Y = 1F
+        private const val CRANE_COL_SHAPE_INITIAL_POS_X = 0.2F
+        private const val CRANE_COL_SHAPE_INITIAL_POS_Y = 3.05F
         private const val CRANE_COL_SHAPE_INITIAL_POS_Z = 0F
         private const val BALL_DAMPING = 0.6F
         private const val BALL_RADIUS = 0.2F
