@@ -5,9 +5,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.graphics.g3d.ModelInstance
-import com.badlogic.gdx.math.Matrix4
-import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.*
 import com.badlogic.gdx.physics.bullet.collision.btBoxShape
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject.CollisionFlags.CF_CHARACTER_OBJECT
@@ -19,8 +17,6 @@ import com.gadarts.demolition.core.assets.ModelsDefinitions
 import com.gadarts.demolition.core.components.ComponentsMapper
 import com.gadarts.demolition.core.systems.CommonData.Companion.CHAIN_COLLISION_SHAPE_HEIGHT
 import com.gadarts.demolition.core.systems.CommonData.Companion.CHAIN_COLLISION_SHAPE_RADIUS
-import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_CONST_REL_POINT_X
-import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_CONST_REL_POINT_Y
 import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_SHAPE_DEPTH
 import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_SHAPE_HEIGHT
 import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_SHAPE_WIDTH
@@ -32,6 +28,7 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
     InputSystemEventsSubscriber, InputProcessor {
 
 
+    private val craneRotation = Vector3()
     private lateinit var crane: Entity
     private lateinit var player: Entity
     private val prevTouchPos = Vector2()
@@ -61,11 +58,11 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
     }
 
     private fun addChains(): List<Entity> {
-        val chain1 = addChain(auxVector1.set(0F,1F,0F))
-        val chain2 = addChain(auxVector1.set(0F,1F,0F))
-        val chain3 = addChain(auxVector1.set(0F,1F,0F))
-        val chain4 = addChain(auxVector1.set(0F,1F,0F))
-        val chain5 = addChain(auxVector1.set(0F,1F,0F))
+        val chain1 = addChain(auxVector1.set(0F, 1F, 0F))
+        val chain2 = addChain(auxVector1.set(0F, 1F, 0F))
+        val chain3 = addChain(auxVector1.set(0F, 1F, 0F))
+        val chain4 = addChain(auxVector1.set(0F, 1F, 0F))
+        val chain5 = addChain(auxVector1.set(0F, 1F, 0F))
         return listOf(chain1, chain2, chain3, chain4, chain5)
     }
 
@@ -86,7 +83,7 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
         rigidBody.setDamping(0F, BALL_DAMPING)
         val motionState = rigidBody.motionState
         motionState.getWorldTransform(auxMatrix1)
-        motionState.setWorldTransform(auxMatrix1.setToTranslation(0F,1F,0F))
+        motionState.setWorldTransform(auxMatrix1.setToTranslation(0F, 1F, 0F))
         return ball
     }
 
@@ -185,28 +182,48 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
 
     override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
         if (DefaultGameSettings.DEBUG_INPUT) return false
-        handleRotation(screenX, screenY)
+        handleRotationAroundY(screenX)
+        handleRotationAroundZ(screenY)
+        prevTouchPos.set(screenX.toFloat(), screenY.toFloat())
         return true
     }
 
-    private fun handleRotation(screenX: Int, screenY: Int) {
-        rotatePlayerModel(screenX)
+    private fun handleRotationAroundZ(screenY: Int) {
+        val craneModelIns = ComponentsMapper.modelInstance.get(crane).modelInstance
+        val newZ = craneRotation.z + (prevTouchPos.y - screenY) * ROTATION_SCALE
+        craneRotation.set(
+            craneRotation.x,
+            craneRotation.y,
+            MathUtils.clamp(newZ, -20F, 20F)
+        )
+        craneModelIns.transform.getRotation(auxQuat)
+        craneModelIns.transform.setFromEulerAngles(
+            craneRotation.x,
+            auxQuat.pitch,
+            craneRotation.z
+        )
+        craneModelIns.transform.trn(-CRANE_MODEL_OFFSET_X * MathUtils.cosDeg(craneRotation.x), CRANE_MODEL_OFFSET_Y, CRANE_MODEL_OFFSET_X * MathUtils.sinDeg(craneRotation.x))
+    }
+
+    private fun handleRotationAroundY(screenX: Int) {
         val motionState = ComponentsMapper.physics.get(crane).rigidBody.motionState
         motionState.getWorldTransform(auxMatrix1)
-        auxMatrix1.translate(-CRANE_MODEL_OFFSET_X+0.4F, 0F, 0F)
-        auxMatrix1.rotate(Vector3.Y, (screenX - prevTouchPos.x) * ROTATION_SCALE)
-        auxMatrix1.translate(CRANE_MODEL_OFFSET_X-0.4F, 0F, 0F)
+        val newX = craneRotation.x + (screenX - prevTouchPos.x) * ROTATION_SCALE
+        Gdx.app.log("!","{$newX}")
+        craneRotation.set(
+            MathUtils.clamp(newX, -90F, 90F),
+            craneRotation.y,
+            craneRotation.z
+        )
+        rotatePlayerModel(screenX)
         motionState.setWorldTransform(auxMatrix1)
-        prevTouchPos.set(screenX.toFloat(), screenY.toFloat())
     }
 
     private fun rotatePlayerModel(screenX: Int) {
         val playerModelIns = ComponentsMapper.modelInstance.get(player).modelInstance
-        playerModelIns.transform.rotate(Vector3.Y, (screenX - prevTouchPos.x) * ROTATION_SCALE)
-        val craneModelIns = ComponentsMapper.modelInstance.get(crane).modelInstance
-        craneModelIns.transform.translate(CRANE_MODEL_OFFSET_X, 0F, 0F)
-        craneModelIns.transform.rotate(Vector3.Y, (screenX - prevTouchPos.x) * ROTATION_SCALE)
-        craneModelIns.transform.translate(-CRANE_MODEL_OFFSET_X, 0F, 0F)
+        playerModelIns.transform.getTranslation(auxVector1)
+        playerModelIns.transform.setToRotation(Vector3.Y, craneRotation.x)
+        playerModelIns.transform.setTranslation(auxVector1)
     }
 
     override fun mouseMoved(screenX: Int, screenY: Int): Boolean {
@@ -221,6 +238,7 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
         private const val ROTATION_SCALE = 0.1F
         private val auxVector1 = Vector3()
         private val auxMatrix1 = Matrix4()
+        private val auxQuat = Quaternion()
         private const val WHEELS_OFFSET_Y = 0.04F
         private const val BODY_OFFSET_Y = 0.25F
         private const val CRANE_MODEL_OFFSET_X = 0.6F

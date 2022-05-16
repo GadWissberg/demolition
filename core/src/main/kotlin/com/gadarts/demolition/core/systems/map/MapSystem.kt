@@ -31,12 +31,7 @@ class MapSystem : GameEntitySystem(), Notifier<MapSystemEventsSubscriber> {
     override fun initialize(am: GameAssetManager) {
         val modelBuilder = ModelBuilder()
         addGround(modelBuilder)
-//        val chain5 = addChains(modelBuilder)
-//        createHolder(modelBuilder, chain5)
     }
-
-
-
 
 
     private fun createChainModel(modelBuilder: ModelBuilder) {
