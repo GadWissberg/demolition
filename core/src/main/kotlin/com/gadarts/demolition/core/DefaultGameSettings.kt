@@ -7,7 +7,7 @@ object DefaultGameSettings {
     /**
      * Whether to show physics collision shapes.
      */
-    const val SHOW_COLLISION_SHAPES = false
+    const val SHOW_COLLISION_SHAPES = true
 
     /**
      * FPS MAX.

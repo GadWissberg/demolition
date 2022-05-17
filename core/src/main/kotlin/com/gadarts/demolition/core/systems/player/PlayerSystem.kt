@@ -9,17 +9,18 @@ import com.badlogic.gdx.math.*
 import com.badlogic.gdx.physics.bullet.collision.btBoxShape
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject.CollisionFlags.CF_CHARACTER_OBJECT
+import com.badlogic.gdx.physics.bullet.collision.btCompoundShape
 import com.badlogic.gdx.physics.bullet.collision.btSphereShape
 import com.gadarts.demolition.core.DefaultGameSettings
 import com.gadarts.demolition.core.EntityBuilder
 import com.gadarts.demolition.core.assets.GameAssetManager
-import com.gadarts.demolition.core.assets.ModelsDefinitions
+import com.gadarts.demolition.core.assets.ModelsDefinitions.*
 import com.gadarts.demolition.core.components.ComponentsMapper
 import com.gadarts.demolition.core.systems.CommonData.Companion.CHAIN_COLLISION_SHAPE_HEIGHT
 import com.gadarts.demolition.core.systems.CommonData.Companion.CHAIN_COLLISION_SHAPE_RADIUS
-import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_SHAPE_DEPTH
-import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_SHAPE_HEIGHT
-import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_SHAPE_WIDTH
+import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_SHAPE_HALF_DEPTH
+import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_SHAPE_HALF_HEIGHT
+import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_SHAPE_HALF_WIDTH
 import com.gadarts.demolition.core.systems.GameEntitySystem
 import com.gadarts.demolition.core.systems.Notifier
 import com.gadarts.demolition.core.systems.input.InputSystemEventsSubscriber
@@ -28,7 +29,7 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
     InputSystemEventsSubscriber, InputProcessor {
 
 
-    private val craneRotation = Vector3()
+    private val craneRot = Vector3()
     private lateinit var crane: Entity
     private lateinit var player: Entity
     private val prevTouchPos = Vector2()
@@ -67,83 +68,89 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
     }
 
     private fun addBall(): Entity {
-        val colShape = btSphereShape(BALL_RADIUS)
-        val model = assetsManager.getAssetByDefinition(ModelsDefinitions.BALL)
-        val modelInstance = ModelInstance(model)
+        val modelInstance = ModelInstance(assetsManager.getAssetByDefinition(BALL))
         val ball = EntityBuilder.begin().addModelInstanceComponent(
             modelInstance,
             auxVector1.set(0F, 1F, 0F)
         ).addPhysicsComponent(
-            colShape,
+            btSphereShape(BALL_RADIUS),
             modelInstance.transform,
-            80F,
+            BALL_MASS,
             CF_CHARACTER_OBJECT
         ).finishAndAddToEngine()
-        val rigidBody = ComponentsMapper.physics.get(ball).rigidBody
-        rigidBody.setDamping(0F, BALL_DAMPING)
-        val motionState = rigidBody.motionState
-        motionState.getWorldTransform(auxMatrix1)
-        motionState.setWorldTransform(auxMatrix1.setToTranslation(0F, 1F, 0F))
+        initializeBall(ball)
         return ball
     }
 
+    private fun initializeBall(ball: Entity) {
+        val rigidBody = ComponentsMapper.physics.get(ball).rigidBody
+        rigidBody.setDamping(BALL_LINEAR_DAMPING, BALL_ANGULAR_DAMPING)
+        val motionState = rigidBody.motionState
+        motionState.getWorldTransform(auxMatrix1)
+        motionState.setWorldTransform(auxMatrix1.setToTranslation(0F, 1F, 0F))
+    }
+
     private fun addChain(position: Vector3): Entity {
-        val colShape = btCapsuleShape(CHAIN_COLLISION_SHAPE_RADIUS, CHAIN_COLLISION_SHAPE_HEIGHT)
-        val model = assetsManager.getAssetByDefinition(ModelsDefinitions.STRING)
-        val modelInstance = ModelInstance(model)
+        val modelInstance = ModelInstance(assetsManager.getAssetByDefinition(CHAIN))
         val chain = EntityBuilder.begin().addModelInstanceComponent(
             modelInstance,
             position
         ).addPhysicsComponent(
-            colShape,
+            btCapsuleShape(CHAIN_COLLISION_SHAPE_RADIUS, CHAIN_COLLISION_SHAPE_HEIGHT),
             modelInstance.transform,
-            10F,
+            CHAIN_MASS,
             CF_CHARACTER_OBJECT
         ).finishAndAddToEngine()
-        ComponentsMapper.physics.get(chain).rigidBody.setDamping(0F, 5F)
+        ComponentsMapper.physics.get(chain).rigidBody.setDamping(0F, 10F)
         return chain
     }
 
     private fun addCrane() {
+        val collisionShape = createCraneCollisionShape()
+        val modelInstance = ModelInstance(assetsManager.getAssetByDefinition(CRANE))
         crane = EntityBuilder.begin()
             .addModelInstanceComponent(
-                assetsManager.getAssetByDefinition(ModelsDefinitions.CRANE),
+                modelInstance,
                 auxVector1.set(-CRANE_MODEL_OFFSET_X, CRANE_MODEL_OFFSET_Y, 0F)
             )
-            .addPhysicsComponent(
-                btBoxShape(
-                    auxVector1.set(
-                        CRANE_SHAPE_WIDTH,
-                        CRANE_SHAPE_HEIGHT,
-                        CRANE_SHAPE_DEPTH
-                    )
-                ), Matrix4()
-            )
+            .addPhysicsComponent(collisionShape, modelInstance.transform)
             .finishAndAddToEngine()
-        placeCraneCollisionShape()
     }
 
-    private fun placeCraneCollisionShape() {
-        val motionState = ComponentsMapper.physics.get(crane).rigidBody.motionState
-        motionState.getWorldTransform(auxMatrix1)
-        auxMatrix1.translate(
-            CRANE_COL_SHAPE_INITIAL_POS_X,
-            CRANE_COL_SHAPE_INITIAL_POS_Y,
-            CRANE_COL_SHAPE_INITIAL_POS_Z
+    private fun createCraneCollisionShape(): btCompoundShape {
+        val collisionShape = btCompoundShape()
+        auxVector1.set(CRANE_SHAPE_HALF_WIDTH, CRANE_SHAPE_HALF_HEIGHT, CRANE_SHAPE_HALF_DEPTH)
+        val firstPart = btBoxShape(auxVector1)
+        val secondPart = btBoxShape(auxVector1)
+        addCraneChildShapesToCompound(collisionShape, firstPart, secondPart)
+        return collisionShape
+    }
+
+    private fun addCraneChildShapesToCompound(
+        collisionShape: btCompoundShape,
+        firstPart: btBoxShape,
+        secondPart: btBoxShape
+    ) {
+        collisionShape.addChildShape(
+            auxMatrix1.idt().translate(0F, CRANE_SHAPE_HALF_WIDTH, 0F).rotate(Vector3.Z, 90F),
+            firstPart
         )
-        motionState.setWorldTransform(auxMatrix1)
+        collisionShape.addChildShape(
+            auxMatrix1.idt().translate(CRANE_SHAPE_HALF_WIDTH, 1.95F, 0F).rotate(Vector3.Z, 8F),
+            secondPart
+        )
     }
 
     private fun addPlayerBody() {
         player = EntityBuilder.begin().addModelInstanceComponent(
-            assetsManager.getAssetByDefinition(ModelsDefinitions.BODY),
+            assetsManager.getAssetByDefinition(BODY),
             auxVector1.set(0F, BODY_OFFSET_Y, 0F)
         ).finishAndAddToEngine()
     }
 
     private fun addPlayerWheels() {
         EntityBuilder.begin().addModelInstanceComponent(
-            assetsManager.getAssetByDefinition(ModelsDefinitions.CRANE_WHEELS),
+            assetsManager.getAssetByDefinition(CRANE_WHEELS),
             auxVector1.set(0F, WHEELS_OFFSET_Y, 0F)
         ).finishAndAddToEngine()
     }
@@ -182,47 +189,61 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
 
     override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
         if (DefaultGameSettings.DEBUG_INPUT) return false
-        handleRotationAroundY(screenX)
-        handleRotationAroundZ(screenY)
+        calculateCraneRotation(screenX, screenY)
+        ComponentsMapper.modelInstance.get(crane).modelInstance.transform.trn(
+            -CRANE_MODEL_OFFSET_X * MathUtils.cosDeg(craneRot.x),
+            CRANE_MODEL_OFFSET_Y,
+            CRANE_MODEL_OFFSET_X * MathUtils.sinDeg(craneRot.x)
+        )
         prevTouchPos.set(screenX.toFloat(), screenY.toFloat())
         return true
     }
 
+    private fun calculateCraneRotation(screenX: Int, screenY: Int) {
+        handleRotationAroundY(screenX)
+        handleRotationAroundZ(screenY)
+    }
+
     private fun handleRotationAroundZ(screenY: Int) {
         val craneModelIns = ComponentsMapper.modelInstance.get(crane).modelInstance
-        val newZ = craneRotation.z + (prevTouchPos.y - screenY) * ROTATION_SCALE
-        craneRotation.set(
-            craneRotation.x,
-            craneRotation.y,
-            MathUtils.clamp(newZ, -20F, 20F)
+        val newZ = craneRot.z + calculateRotationDelta(screenY, prevTouchPos.y)
+        craneRot.set(
+            craneRot.x,
+            craneRot.y,
+            MathUtils.clamp(newZ, -CRANE_MAX_ANGLE_AROUND_Z, CRANE_MAX_ANGLE_AROUND_Z)
         )
-        craneModelIns.transform.getRotation(auxQuat)
         craneModelIns.transform.setFromEulerAngles(
-            craneRotation.x,
-            auxQuat.pitch,
-            craneRotation.z
+            craneRot.x,
+            craneModelIns.transform.getRotation(auxQuat).pitch,
+            craneRot.z
         )
-        craneModelIns.transform.trn(-CRANE_MODEL_OFFSET_X * MathUtils.cosDeg(craneRotation.x), CRANE_MODEL_OFFSET_Y, CRANE_MODEL_OFFSET_X * MathUtils.sinDeg(craneRotation.x))
+    }
+
+    private fun calculateRotationDelta(screenCoordinate: Int, prevCoordinate: Float): Float {
+        return MathUtils.clamp(
+            (prevCoordinate - screenCoordinate) * ROTATION_SCALE,
+            -MAX_CRANE_ROT_DELTA,
+            MAX_CRANE_ROT_DELTA
+        )
     }
 
     private fun handleRotationAroundY(screenX: Int) {
         val motionState = ComponentsMapper.physics.get(crane).rigidBody.motionState
         motionState.getWorldTransform(auxMatrix1)
-        val newX = craneRotation.x + (screenX - prevTouchPos.x) * ROTATION_SCALE
-        Gdx.app.log("!","{$newX}")
-        craneRotation.set(
-            MathUtils.clamp(newX, -90F, 90F),
-            craneRotation.y,
-            craneRotation.z
+        val newX = craneRot.x + calculateRotationDelta(-screenX, -prevTouchPos.x)
+        craneRot.set(
+            MathUtils.clamp(newX, -CRANE_MAX_ANGLE_AROUND_Y, CRANE_MAX_ANGLE_AROUND_Y),
+            craneRot.y,
+            craneRot.z
         )
-        rotatePlayerModel(screenX)
+        rotatePlayerModel()
         motionState.setWorldTransform(auxMatrix1)
     }
 
-    private fun rotatePlayerModel(screenX: Int) {
+    private fun rotatePlayerModel() {
         val playerModelIns = ComponentsMapper.modelInstance.get(player).modelInstance
         playerModelIns.transform.getTranslation(auxVector1)
-        playerModelIns.transform.setToRotation(Vector3.Y, craneRotation.x)
+        playerModelIns.transform.setToRotation(Vector3.Y, craneRot.x)
         playerModelIns.transform.setTranslation(auxVector1)
     }
 
@@ -243,11 +264,14 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
         private const val BODY_OFFSET_Y = 0.25F
         private const val CRANE_MODEL_OFFSET_X = 0.6F
         private const val CRANE_MODEL_OFFSET_Y = 1F
-        private const val CRANE_COL_SHAPE_INITIAL_POS_X = 0.2F
-        private const val CRANE_COL_SHAPE_INITIAL_POS_Y = 3.05F
-        private const val CRANE_COL_SHAPE_INITIAL_POS_Z = 0F
-        private const val BALL_DAMPING = 0.6F
+        private const val BALL_ANGULAR_DAMPING = 1F
+        private const val BALL_LINEAR_DAMPING = 0.2F
         private const val BALL_RADIUS = 0.2F
+        private const val BALL_MASS = 80F
+        private const val CHAIN_MASS = 100F
+        private const val CRANE_MAX_ANGLE_AROUND_Z = 20F
+        private const val CRANE_MAX_ANGLE_AROUND_Y = 90F
+        private const val MAX_CRANE_ROT_DELTA = 1F
 
     }
 }

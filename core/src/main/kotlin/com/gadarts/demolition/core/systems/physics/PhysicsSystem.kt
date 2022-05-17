@@ -11,15 +11,15 @@ import com.badlogic.gdx.physics.bullet.collision.btCollisionDispatcher
 import com.badlogic.gdx.physics.bullet.collision.btDefaultCollisionConfiguration
 import com.badlogic.gdx.physics.bullet.collision.btGhostPairCallback
 import com.badlogic.gdx.physics.bullet.dynamics.btDiscreteDynamicsWorld
+import com.badlogic.gdx.physics.bullet.dynamics.btJointFeedback
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody
 import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw
 import com.gadarts.demolition.core.DefaultGameSettings
 import com.gadarts.demolition.core.assets.GameAssetManager
 import com.gadarts.demolition.core.components.ComponentsMapper
+import com.gadarts.demolition.core.systems.CommonData
 import com.gadarts.demolition.core.systems.CommonData.Companion.CHAIN_COLLISION_SHAPE_HEIGHT
-import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_CONST_REL_POINT_X
-import com.gadarts.demolition.core.systems.CommonData.Companion.CRANE_CONST_REL_POINT_Y
 import com.gadarts.demolition.core.systems.GameEntitySystem
 import com.gadarts.demolition.core.systems.Notifier
 import com.gadarts.demolition.core.systems.player.PlayerSystemEventsSubscriber
@@ -35,6 +35,7 @@ class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystem
     private lateinit var collisionConfiguration: btDefaultCollisionConfiguration
     override val subscribers: HashSet<PhysicsSystemEventsSubscriber> = HashSet()
     private val constraints = ArrayList<PhysicsConstraint>()
+
     override fun initialize(am: GameAssetManager) {
         Bullet.init()
         initializePhysics()
@@ -123,11 +124,8 @@ class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystem
             PhysicsConstraint(
                 ComponentsMapper.physics.get(crane).rigidBody,
                 ComponentsMapper.physics.get(chain1).rigidBody,
-                auxVector1.set(
-                    CRANE_CONST_REL_POINT_X,
-                    CRANE_CONST_REL_POINT_Y, 0F
-                ),
-                auxVector2.set(0F, CHAIN_COLLISION_SHAPE_HEIGHT/3F, 0F),
+                auxVector1.set(CRANE_CONST_REL_POINT_X, CRANE_CONST_REL_POINT_Y, 0F),
+                auxVector2.set(0F, CHAIN_COLLISION_SHAPE_HEIGHT / 3F, 0F),
                 true
             )
         )
@@ -137,15 +135,14 @@ class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystem
         chain1: Entity,
         chain2: Entity
     ) {
-        constraints.add(
-            PhysicsConstraint(
-                ComponentsMapper.physics.get(chain1).rigidBody,
-                ComponentsMapper.physics.get(chain2).rigidBody,
-                auxVector1.set(0F, -CHAIN_COLLISION_SHAPE_HEIGHT/2F, 0F),
-                auxVector2.set(0F, CHAIN_COLLISION_SHAPE_HEIGHT / 2F, 0F),
-                true
-            )
+        val physicsConstraint = PhysicsConstraint(
+            ComponentsMapper.physics.get(chain1).rigidBody,
+            ComponentsMapper.physics.get(chain2).rigidBody,
+            auxVector1.set(0F, -CHAIN_COLLISION_SHAPE_HEIGHT / 2F, 0F),
+            auxVector2.set(0F, CHAIN_COLLISION_SHAPE_HEIGHT / 2F, 0F),
+            true
         )
+        constraints.add(physicsConstraint)
     }
 
 
@@ -183,5 +180,7 @@ class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystem
     companion object {
         val auxVector1 = Vector3()
         val auxVector2 = Vector3()
+        const val CRANE_CONST_REL_POINT_X = CommonData.CRANE_SHAPE_HALF_WIDTH * 2F - 0.1F
+        const val CRANE_CONST_REL_POINT_Y = CommonData.CRANE_SHAPE_HALF_WIDTH * 2F + 0.2F
     }
 }

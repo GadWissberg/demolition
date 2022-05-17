@@ -8,7 +8,7 @@ enum class ModelsDefinitions(fileNames: Int = 1) : AssetDefinition<Model> {
     CRANE_WHEELS,
     BODY,
     CRANE,
-    STRING,
+    CHAIN,
     BALL;
 
     private val paths = ArrayList<String>()
