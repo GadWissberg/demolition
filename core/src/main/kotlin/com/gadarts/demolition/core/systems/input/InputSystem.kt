@@ -8,7 +8,7 @@ import com.gadarts.demolition.core.assets.GameAssetManager
 import com.gadarts.demolition.core.systems.GameEntitySystem
 import com.gadarts.demolition.core.systems.Notifier
 
-class InputSystem : GameEntitySystem(), Notifier<InputSystemEventsSubscriber> {
+class InputSystem : GameEntitySystem<InputSystemEventsSubscriber>() {
 
     private lateinit var debugInput: CameraInputController
     override val subscribers: HashSet<InputSystemEventsSubscriber> = HashSet()

@@ -11,12 +11,11 @@ import com.badlogic.gdx.physics.bullet.collision.btBoxShape
 import com.gadarts.demolition.core.EntityBuilder
 import com.gadarts.demolition.core.assets.GameAssetManager
 import com.gadarts.demolition.core.systems.GameEntitySystem
-import com.gadarts.demolition.core.systems.Notifier
 
 /**
  * Responsible for the environment.
  */
-class MapSystem : GameEntitySystem(), Notifier<MapSystemEventsSubscriber> {
+class MapSystem : GameEntitySystem<MapSystemEventsSubscriber>() {
 
     private lateinit var groundModel: Model
     override val subscribers: HashSet<MapSystemEventsSubscriber> = HashSet()

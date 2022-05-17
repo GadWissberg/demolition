@@ -7,10 +7,9 @@ import com.gadarts.demolition.core.components.ComponentsMapper
 import com.gadarts.demolition.core.systems.CommonData
 import com.gadarts.demolition.core.systems.CommonData.Companion.CHAIN_COLLISION_SHAPE_HEIGHT
 import com.gadarts.demolition.core.systems.GameEntitySystem
-import com.gadarts.demolition.core.systems.Notifier
 import com.gadarts.demolition.core.systems.player.PlayerSystemEventsSubscriber
 
-class PhysicsSystem : GameEntitySystem(), Notifier<PhysicsSystemEventsSubscriber>,
+class PhysicsSystem : GameEntitySystem<PhysicsSystemEventsSubscriber>(),
     PlayerSystemEventsSubscriber {
 
     private val bulletEngineHandler = BulletEngineHandler()
@@ -77,7 +76,9 @@ class PhysicsSystem : GameEntitySystem(), Notifier<PhysicsSystemEventsSubscriber
         addConstraintBetweenChains(chains[1], chains[2])
         addConstraintBetweenChains(chains[2], chains[3])
         addConstraintBetweenChains(chains[3], chains[4])
-        addConstraintBetweenChainAndBall(chains[4], ball)
+        addConstraintBetweenChains(chains[4], chains[5])
+        addConstraintBetweenChains(chains[5], chains[6])
+        addConstraintBetweenChainAndBall(chains[6], ball)
         insertConstraints()
     }
 

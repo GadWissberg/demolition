@@ -23,7 +23,7 @@ import com.gadarts.demolition.core.systems.Notifier
 import com.gadarts.demolition.core.systems.physics.CollisionShapesDebugDrawing
 import kotlin.math.max
 
-class RenderSystem : GameEntitySystem(), Disposable, Notifier<RenderSystemEventsSubscriber> {
+class RenderSystem : GameEntitySystem<RenderSystemEventsSubscriber>(), Disposable {
 
 
     private lateinit var modelBatch: ModelBatch

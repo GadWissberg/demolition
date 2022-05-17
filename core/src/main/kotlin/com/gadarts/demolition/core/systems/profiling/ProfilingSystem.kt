@@ -12,7 +12,7 @@ import com.gadarts.demolition.core.assets.GameAssetManager
 import com.gadarts.demolition.core.systems.GameEntitySystem
 import com.gadarts.demolition.core.systems.Notifier
 
-class ProfilingSystem : GameEntitySystem(), Notifier<ProfilingSystemEventsSubscriber> {
+class ProfilingSystem : GameEntitySystem<ProfilingSystemEventsSubscriber>() {
 
     private val stringBuilder: StringBuilder = StringBuilder()
     private lateinit var glProfiler: GLProfiler

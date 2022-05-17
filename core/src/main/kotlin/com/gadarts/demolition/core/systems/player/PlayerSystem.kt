@@ -25,7 +25,7 @@ import com.gadarts.demolition.core.systems.GameEntitySystem
 import com.gadarts.demolition.core.systems.Notifier
 import com.gadarts.demolition.core.systems.input.InputSystemEventsSubscriber
 
-class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
+class PlayerSystem : GameEntitySystem<PlayerSystemEventsSubscriber>(),
     InputSystemEventsSubscriber, InputProcessor {
 
 
@@ -64,7 +64,9 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
         val chain3 = addChain(auxVector1.set(0F, 1F, 0F))
         val chain4 = addChain(auxVector1.set(0F, 1F, 0F))
         val chain5 = addChain(auxVector1.set(0F, 1F, 0F))
-        return listOf(chain1, chain2, chain3, chain4, chain5)
+        val chain6 = addChain(auxVector1.set(0F, 1F, 0F))
+        val chain7 = addChain(auxVector1.set(0F, 1F, 0F))
+        return listOf(chain1, chain2, chain3, chain4, chain5, chain6, chain7)
     }
 
     private fun addBall(): Entity {
@@ -269,7 +271,7 @@ class PlayerSystem : GameEntitySystem(), Notifier<PlayerSystemEventsSubscriber>,
         private const val BALL_RADIUS = 0.2F
         private const val BALL_MASS = 80F
         private const val CHAIN_MASS = 100F
-        private const val CRANE_MAX_ANGLE_AROUND_Z = 20F
+        private const val CRANE_MAX_ANGLE_AROUND_Z = 45F
         private const val CRANE_MAX_ANGLE_AROUND_Y = 90F
         private const val MAX_CRANE_ROT_DELTA = 1F
 
