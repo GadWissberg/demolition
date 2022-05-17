@@ -40,8 +40,8 @@ class CameraSystem : GameEntitySystem(), Notifier<CameraSystemEventsSubscriber> 
     companion object {
         const val NEAR = 0.1F
         const val FAR = 300F
-        const val INITIAL_Y = 4F
-        const val INITIAL_X = 3F
+        const val INITIAL_Y = 6F
+        const val INITIAL_X = 5F
     }
 
     override val subscribers: HashSet<CameraSystemEventsSubscriber> = HashSet()
