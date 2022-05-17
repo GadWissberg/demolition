@@ -17,7 +17,7 @@ class CommonData() : Disposable {
     )
     val stage: Stage = Stage()
     var debugDrawingMethod: CollisionShapesDebugDrawing? = null
-    var collisionWorld: btDiscreteDynamicsWorld? = null
+
     override fun dispose() {
         stage.dispose()
     }

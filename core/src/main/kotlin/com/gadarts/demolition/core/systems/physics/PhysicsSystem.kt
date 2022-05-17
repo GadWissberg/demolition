@@ -1,21 +1,7 @@
 package com.gadarts.demolition.core.systems.physics
 
 import com.badlogic.ashley.core.Entity
-import com.badlogic.ashley.core.EntityListener
-import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.math.Vector3
-import com.badlogic.gdx.physics.bullet.Bullet
-import com.badlogic.gdx.physics.bullet.DebugDrawer
-import com.badlogic.gdx.physics.bullet.collision.btAxisSweep3
-import com.badlogic.gdx.physics.bullet.collision.btCollisionDispatcher
-import com.badlogic.gdx.physics.bullet.collision.btDefaultCollisionConfiguration
-import com.badlogic.gdx.physics.bullet.collision.btGhostPairCallback
-import com.badlogic.gdx.physics.bullet.dynamics.btDiscreteDynamicsWorld
-import com.badlogic.gdx.physics.bullet.dynamics.btJointFeedback
-import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody
-import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver
-import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw
-import com.gadarts.demolition.core.DefaultGameSettings
 import com.gadarts.demolition.core.assets.GameAssetManager
 import com.gadarts.demolition.core.components.ComponentsMapper
 import com.gadarts.demolition.core.systems.CommonData
@@ -24,99 +10,38 @@ import com.gadarts.demolition.core.systems.GameEntitySystem
 import com.gadarts.demolition.core.systems.Notifier
 import com.gadarts.demolition.core.systems.player.PlayerSystemEventsSubscriber
 
-class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystemEventsSubscriber>,
+class PhysicsSystem : GameEntitySystem(), Notifier<PhysicsSystemEventsSubscriber>,
     PlayerSystemEventsSubscriber {
 
-    private lateinit var debugDrawer: DebugDrawer
-    private lateinit var broadPhase: btAxisSweep3
-    private lateinit var ghostPairCallback: btGhostPairCallback
-    private lateinit var solver: btSequentialImpulseConstraintSolver
-    private lateinit var dispatcher: btCollisionDispatcher
-    private lateinit var collisionConfiguration: btDefaultCollisionConfiguration
+    private val bulletEngineHandler = BulletEngineHandler()
     override val subscribers: HashSet<PhysicsSystemEventsSubscriber> = HashSet()
     private val constraints = ArrayList<PhysicsConstraint>()
 
     override fun initialize(am: GameAssetManager) {
-        Bullet.init()
-        initializePhysics()
+        bulletEngineHandler.initialize(commonData, engine)
     }
 
-    private fun initializePhysics() {
-        collisionConfiguration = btDefaultCollisionConfiguration()
-        dispatcher = btCollisionDispatcher(collisionConfiguration)
-        solver = btSequentialImpulseConstraintSolver()
-        initializeBroadPhase()
-        initializeCollisionWorld()
-        initializeDebug()
-        commonData.debugDrawingMethod = object : CollisionShapesDebugDrawing {
-            override fun drawCollisionShapes(camera: PerspectiveCamera) {
-                debugDrawer.begin(camera)
-                commonData.collisionWorld!!.debugDrawWorld()
-                debugDrawer.end()
-            }
-        }
-        engine.addEntityListener(this)
-    }
-
-    private fun initializeDebug() {
-        debugDrawer = DebugDrawer()
-        debugDrawer.debugMode = btIDebugDraw.DebugDrawModes.DBG_DrawWireframe
-        commonData.collisionWorld!!.debugDrawer = debugDrawer
-    }
-
-    override fun entityAdded(entity: Entity?) {
-        if (ComponentsMapper.physics.has(entity)) {
-            val btRigidBody: btRigidBody = ComponentsMapper.physics.get(entity).rigidBody
-            commonData.collisionWorld!!.addRigidBody(btRigidBody)
-        }
-    }
-
-    override fun entityRemoved(entity: Entity?) {
-        if (ComponentsMapper.physics.has(entity)) {
-            val body: btRigidBody = ComponentsMapper.physics[entity].rigidBody
-            body.activationState = 0
-            commonData.collisionWorld!!.removeCollisionObject(body)
-        }
-    }
-
-    private fun initializeBroadPhase() {
-        ghostPairCallback = btGhostPairCallback()
-        val corner1 = Vector3(-100F, -100F, -100F)
-        val corner2 = Vector3(100F, 100F, 100F)
-        broadPhase = btAxisSweep3(corner1, corner2)
-        broadPhase.overlappingPairCache.setInternalGhostPairCallback(ghostPairCallback)
-    }
 
     override fun resume(delta: Long) {
     }
 
-    private fun initializeCollisionWorld() {
-        commonData.collisionWorld = btDiscreteDynamicsWorld(
-            dispatcher,
-            broadPhase,
-            solver,
-            collisionConfiguration
-        )
-        commonData.collisionWorld!!.gravity = Vector3(0F, -9.8f, 0F)
-    }
 
     override fun update(deltaTime: Float) {
-        commonData.collisionWorld!!.stepSimulation(
-            deltaTime,
-            5,
-            1f / DefaultGameSettings.FPS_TARGET
-        )
+        bulletEngineHandler.update(deltaTime)
     }
 
     override fun dispose() {
-        collisionConfiguration.dispose()
-        solver.dispose()
-        dispatcher.dispose()
-        ghostPairCallback.dispose()
-        broadPhase.dispose()
-        commonData.collisionWorld?.dispose()
-        debugDrawer.dispose()
+        bulletEngineHandler.dispose()
         constraints.forEach { it.dispose() }
+    }
+
+    private fun insertConstraints() {
+        constraints.forEach {
+            bulletEngineHandler.collisionWorld.addConstraint(
+                it,
+                it.disableCollisionsBetweenLinkedBodies
+            )
+        }
     }
 
     private fun addConstraintBetweenCraneAndChain(chain1: Entity, crane: Entity) {
@@ -153,7 +78,7 @@ class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystem
         addConstraintBetweenChains(chains[2], chains[3])
         addConstraintBetweenChains(chains[3], chains[4])
         addConstraintBetweenChainAndBall(chains[4], ball)
-        addConstraints()
+        insertConstraints()
     }
 
     private fun addConstraintBetweenChainAndBall(chain: Entity, ball: Entity) {
@@ -166,15 +91,6 @@ class PhysicsSystem : GameEntitySystem(), EntityListener, Notifier<PhysicsSystem
                 true
             )
         )
-    }
-
-    private fun addConstraints() {
-        constraints.forEach {
-            commonData.collisionWorld!!.addConstraint(
-                it,
-                it.disableCollisionsBetweenLinkedBodies
-            )
-        }
     }
 
     companion object {
