@@ -5,7 +5,6 @@ import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.physics.bullet.collision.Collision
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody
-import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody.btRigidBodyConstructionInfo
 import com.gadarts.demolition.core.components.physics.MotionState
 
 class PhysicsComponent : GameComponent() {
@@ -22,6 +21,7 @@ class PhysicsComponent : GameComponent() {
         mass: Float,
         transform: Matrix4?,
         flag: Int,
+        angularFactor: Float,
     ) {
         if (transform != null) {
             motionState = MotionState()
@@ -29,7 +29,7 @@ class PhysicsComponent : GameComponent() {
             motionState!!.setWorldTransform(transform)
         }
         calculateLocalInertia(colShape, mass)
-        initializeBody(colShape, mass, transform, flag)
+        initializeBody(colShape, mass, transform, flag, angularFactor)
     }
 
     private fun initializeBody(
@@ -37,6 +37,7 @@ class PhysicsComponent : GameComponent() {
         mass: Float,
         transform: Matrix4?,
         flag: Int,
+        angularFactor: Float,
     ) {
         this.rigidBody = btRigidBody(mass, motionState, colShape, localInertia)
         if (transform != null) {
@@ -44,6 +45,7 @@ class PhysicsComponent : GameComponent() {
         }
         activateBody()
         this.rigidBody.collisionFlags = flag
+        rigidBody.setAngularFactor(angularFactor)
     }
 
     private fun activateBody() {

@@ -12,12 +12,13 @@ import com.gadarts.demolition.core.systems.player.PlayerSystemEventsSubscriber
 class PhysicsSystem : GameEntitySystem<PhysicsSystemEventsSubscriber>(),
     PlayerSystemEventsSubscriber {
 
-    private val bulletEngineHandler = BulletEngineHandler()
+    private lateinit var bulletEngineHandler : BulletEngineHandler
     override val subscribers: HashSet<PhysicsSystemEventsSubscriber> = HashSet()
     private val constraints = ArrayList<PhysicsConstraint>()
 
     override fun initialize(am: GameAssetManager) {
-        bulletEngineHandler.initialize(commonData, engine)
+        bulletEngineHandler = BulletEngineHandler(commonData)
+        bulletEngineHandler.initialize(engine)
     }
 
 
@@ -36,7 +37,7 @@ class PhysicsSystem : GameEntitySystem<PhysicsSystemEventsSubscriber>(),
 
     private fun insertConstraints() {
         constraints.forEach {
-            bulletEngineHandler.collisionWorld.addConstraint(
+            commonData.collisionWorld.addConstraint(
                 it,
                 it.disableCollisionsBetweenLinkedBodies
             )

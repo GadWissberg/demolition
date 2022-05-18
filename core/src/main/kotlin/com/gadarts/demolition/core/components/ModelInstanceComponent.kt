@@ -16,10 +16,12 @@ class ModelInstanceComponent : GameComponent() {
 
     private fun initialize(
         modelInstance1: ModelInstance,
-        position: Vector3,
+        position: Vector3?,
     ) {
         this.modelInstance = modelInstance1
-        this.modelInstance.transform.translate(position)
+        if (position != null) {
+            this.modelInstance.transform.translate(position)
+        }
         modelInstance.calculateBoundingBox(boundingBox)
     }
 
@@ -30,7 +32,7 @@ class ModelInstanceComponent : GameComponent() {
         return auxBox.set(boundingBox)
     }
 
-    fun init(model: ModelInstance, position: Vector3) {
+    fun init(model: ModelInstance, position: Vector3?) {
         initialize(model, position)
     }
 

@@ -22,7 +22,7 @@ object DefaultGameSettings {
     /**
      * Whether to enable the debug input to look around.
      */
-    const val DEBUG_INPUT = false
+    const val DEBUG_INPUT = true
 
 
 

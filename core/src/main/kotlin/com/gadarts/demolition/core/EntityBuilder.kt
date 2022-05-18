@@ -6,26 +6,21 @@ import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Vector3
-import com.badlogic.gdx.physics.bullet.collision.btBroadphaseProxy
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT
-import com.badlogic.gdx.physics.bullet.collision.btCollisionObject.CollisionFlags.CF_STATIC_OBJECT
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape
-import com.badlogic.gdx.physics.bullet.collision.btConvexShape
+import com.gadarts.demolition.core.components.CarComponent
 import com.gadarts.demolition.core.components.ModelInstanceComponent
 import com.gadarts.demolition.core.components.PhysicsComponent
 
 class EntityBuilder private constructor() {
     fun addModelInstanceComponent(
         model: Model,
-        position: Vector3,
+        position: Vector3? = null,
     ): EntityBuilder {
-        val modelInstanceComponent = engine.createComponent(ModelInstanceComponent::class.java)
-        modelInstanceComponent.init(model, position)
-        entity!!.add(modelInstanceComponent)
-        return instance
+        return addModelInstanceComponent(ModelInstance(model), position)
     }
 
-    fun addModelInstanceComponent(model: ModelInstance, position: Vector3): EntityBuilder {
+    fun addModelInstanceComponent(model: ModelInstance, position: Vector3? = null): EntityBuilder {
         val modelInstanceComponent = engine.createComponent(ModelInstanceComponent::class.java)
         modelInstanceComponent.init(model, position)
         entity!!.add(modelInstanceComponent)
@@ -43,15 +38,23 @@ class EntityBuilder private constructor() {
         collisionShape: btCollisionShape,
         transform: Matrix4? = null,
         mass: Float = 0F,
-        collisionFilterFlag: Int = CF_KINEMATIC_OBJECT
+        collisionFilterFlag: Int = CF_KINEMATIC_OBJECT,
+        angularFactor: Float = 1F
     ): EntityBuilder {
         val component = engine.createComponent(PhysicsComponent::class.java)
         component.init(
             collisionShape,
             mass,
             transform,
-            collisionFilterFlag
+            collisionFilterFlag,
+            angularFactor
         )
+        entity!!.add(component)
+        return instance
+    }
+
+    fun addCarComponent(): EntityBuilder {
+        val component = engine.createComponent(CarComponent::class.java)
         entity!!.add(component)
         return instance
     }

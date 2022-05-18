@@ -20,7 +20,7 @@ import com.gadarts.demolition.core.DefaultGameSettings
 import com.gadarts.demolition.core.components.ComponentsMapper
 import com.gadarts.demolition.core.systems.CommonData
 
-class BulletEngineHandler : Disposable, EntityListener {
+class BulletEngineHandler(private val commonData: CommonData) : Disposable, EntityListener {
 
     private lateinit var debugDrawer: DebugDrawer
     private lateinit var broadPhase: btAxisSweep3
@@ -28,12 +28,11 @@ class BulletEngineHandler : Disposable, EntityListener {
     private lateinit var solver: btSequentialImpulseConstraintSolver
     private lateinit var dispatcher: btCollisionDispatcher
     private lateinit var collisionConfiguration: btDefaultCollisionConfiguration
-    lateinit var collisionWorld: btDiscreteDynamicsWorld
 
     private fun initializeDebug() {
         debugDrawer = DebugDrawer()
         debugDrawer.debugMode = btIDebugDraw.DebugDrawModes.DBG_DrawWireframe
-        collisionWorld.debugDrawer = debugDrawer
+        commonData.collisionWorld.debugDrawer = debugDrawer
     }
 
     private fun initializeBroadPhase() {
@@ -47,7 +46,7 @@ class BulletEngineHandler : Disposable, EntityListener {
     override fun entityAdded(entity: Entity?) {
         if (ComponentsMapper.physics.has(entity)) {
             val btRigidBody: btRigidBody = ComponentsMapper.physics.get(entity).rigidBody
-            collisionWorld.addRigidBody(btRigidBody)
+            commonData.collisionWorld.addRigidBody(btRigidBody)
         }
     }
 
@@ -55,11 +54,12 @@ class BulletEngineHandler : Disposable, EntityListener {
         if (ComponentsMapper.physics.has(entity)) {
             val body: btRigidBody = ComponentsMapper.physics[entity].rigidBody
             body.activationState = 0
-            collisionWorld.removeCollisionObject(body)
+            body.dispose()
+            commonData.collisionWorld.removeCollisionObject(body)
         }
     }
 
-    fun initialize(commonData: CommonData, engine: Engine) {
+    fun initialize(engine: Engine) {
         Bullet.init()
         collisionConfiguration = btDefaultCollisionConfiguration()
         dispatcher = btCollisionDispatcher(collisionConfiguration)
@@ -70,7 +70,7 @@ class BulletEngineHandler : Disposable, EntityListener {
         commonData.debugDrawingMethod = object : CollisionShapesDebugDrawing {
             override fun drawCollisionShapes(camera: PerspectiveCamera) {
                 debugDrawer.begin(camera)
-                collisionWorld.debugDrawWorld()
+                commonData.collisionWorld.debugDrawWorld()
                 debugDrawer.end()
             }
         }
@@ -78,13 +78,13 @@ class BulletEngineHandler : Disposable, EntityListener {
     }
 
     private fun initializeCollisionWorld() {
-        collisionWorld = btDiscreteDynamicsWorld(
+        commonData.collisionWorld = btDiscreteDynamicsWorld(
             dispatcher,
             broadPhase,
             solver,
             collisionConfiguration
         )
-        collisionWorld.gravity = Vector3(0F, GRAVITY_FORCE, 0F)
+        commonData.collisionWorld.gravity = Vector3(0F, GRAVITY_FORCE, 0F)
     }
 
     override fun dispose() {
@@ -94,11 +94,10 @@ class BulletEngineHandler : Disposable, EntityListener {
         ghostPairCallback.dispose()
         broadPhase.dispose()
         debugDrawer.dispose()
-        collisionWorld.dispose()
     }
 
     fun update(deltaTime: Float) {
-        collisionWorld.stepSimulation(
+        commonData.collisionWorld.stepSimulation(
             deltaTime,
             5,
             1f / DefaultGameSettings.FPS_TARGET

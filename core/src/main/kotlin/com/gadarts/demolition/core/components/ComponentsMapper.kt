@@ -8,5 +8,7 @@ object ComponentsMapper {
         ComponentMapper.getFor(ModelInstanceComponent::class.java)
     val physics: ComponentMapper<PhysicsComponent> =
         ComponentMapper.getFor(PhysicsComponent::class.java)
+    val car: ComponentMapper<CarComponent> =
+        ComponentMapper.getFor(CarComponent::class.java)
 
 }
