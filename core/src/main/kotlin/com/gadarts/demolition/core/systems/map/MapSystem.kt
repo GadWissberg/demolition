@@ -1,9 +1,14 @@
 package com.gadarts.demolition.core.systems.map
 
+import com.badlogic.ashley.core.Engine
+import com.badlogic.ashley.core.Entity
+import com.badlogic.ashley.core.Family
+import com.badlogic.ashley.utils.ImmutableArray
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
+import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Matrix4
@@ -11,8 +16,12 @@ import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape
 import com.badlogic.gdx.physics.bullet.collision.btCompoundShape
 import com.badlogic.gdx.physics.bullet.collision.btStaticPlaneShape
+import com.gadarts.demolition.core.DefaultGameSettings
 import com.gadarts.demolition.core.EntityBuilder
 import com.gadarts.demolition.core.assets.GameAssetManager
+import com.gadarts.demolition.core.assets.ModelsDefinitions
+import com.gadarts.demolition.core.components.AnimationControllerComponent
+import com.gadarts.demolition.core.components.ComponentsMapper
 import com.gadarts.demolition.core.systems.CommonData.Companion.MAP_SIZE
 import com.gadarts.demolition.core.systems.GameEntitySystem
 
@@ -21,6 +30,7 @@ import com.gadarts.demolition.core.systems.GameEntitySystem
  */
 class MapSystem : GameEntitySystem<MapSystemEventsSubscriber>() {
 
+    private lateinit var animationControllerEntities: ImmutableArray<Entity>
     private lateinit var gridModel: Model
     private lateinit var groundModel: Model
     override val subscribers: HashSet<MapSystemEventsSubscriber> = HashSet()
@@ -28,16 +38,35 @@ class MapSystem : GameEntitySystem<MapSystemEventsSubscriber>() {
     override fun initialize(am: GameAssetManager) {
         val modelBuilder = ModelBuilder()
         addBoundaries(modelBuilder)
-        addGrid(modelBuilder)
-        createDirectionsMap()
+        if (DefaultGameSettings.DISPLAY_GRID) {
+            addGrid(modelBuilder)
+        }
+        addRail()
     }
 
-    private fun createDirectionsMap() {
-        commonData.directionsMapping = Array(MAP_SIZE.toInt()) {
-            Array(MAP_SIZE.toInt()) {
-                Vector3(1F, 0F, 0F)
-            }
+    override fun addedToEngine(engine: Engine?) {
+        super.addedToEngine(engine)
+        val family = Family.all(AnimationControllerComponent::class.java).get()
+        animationControllerEntities = engine!!.getEntitiesFor(family)
+    }
+
+    override fun update(deltaTime: Float) {
+        for (entity in animationControllerEntities) {
+            ComponentsMapper.animationController.get(entity).animationController.update(deltaTime)
         }
+    }
+
+    private fun addRail() {
+        val model = assetsManager.getAssetByDefinition(ModelsDefinitions.RAIL)
+        val modelInstance = ModelInstance(model)
+
+        EntityBuilder.begin()
+            .addModelInstanceComponent(
+                modelInstance,
+                auxVector1.set(MAP_SIZE / 2F + RAIL_X_OFFSET, RAIL_Y_OFFSET, MAP_SIZE / 2F)
+            )
+            .addAnimationControllerComponent(modelInstance)
+            .finishAndAddToEngine()
     }
 
     private fun addGrid(modelBuilder: ModelBuilder) {
@@ -107,5 +136,7 @@ class MapSystem : GameEntitySystem<MapSystemEventsSubscriber>() {
     companion object {
         private val auxVector1 = Vector3()
         private val auxMatrix = Matrix4()
+        const val RAIL_X_OFFSET = 2F
+        const val RAIL_Y_OFFSET = 0.2F
     }
 }

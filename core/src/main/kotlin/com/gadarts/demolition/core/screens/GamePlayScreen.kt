@@ -8,8 +8,6 @@ import com.gadarts.demolition.core.assets.GameAssetManager
 import com.gadarts.demolition.core.systems.*
 import com.gadarts.demolition.core.systems.camera.CameraSystem
 import com.gadarts.demolition.core.systems.camera.CameraSystemEventsSubscriber
-import com.gadarts.demolition.core.systems.car.CarSystem
-import com.gadarts.demolition.core.systems.car.CarSystemEventsSubscriber
 import com.gadarts.demolition.core.systems.input.InputSystem
 import com.gadarts.demolition.core.systems.input.InputSystemEventsSubscriber
 import com.gadarts.demolition.core.systems.map.MapSystem
@@ -43,7 +41,6 @@ class GamePlayScreen(
             ProfilingSystemEventsSubscriber::class.java to ProfilingSystem::class.java,
             MapSystemEventsSubscriber::class.java to MapSystem::class.java,
             PlayerSystemEventsSubscriber::class.java to PlayerSystem::class.java,
-            CarSystemEventsSubscriber::class.java to CarSystem::class.java,
         )
 
     override fun show() {

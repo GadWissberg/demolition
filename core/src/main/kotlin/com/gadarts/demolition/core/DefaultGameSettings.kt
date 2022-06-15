@@ -22,7 +22,12 @@ object DefaultGameSettings {
     /**
      * Whether to enable the debug input to look around.
      */
-    const val DEBUG_INPUT = true
+    const val DEBUG_INPUT = false
+
+    /**
+     * Whether to enable to display grid on ground.
+     */
+    const val DISPLAY_GRID = false
 
 
 

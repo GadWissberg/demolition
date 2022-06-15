@@ -59,13 +59,13 @@ class PlayerSystem : GameEntitySystem<PlayerSystemEventsSubscriber>(),
     }
 
     private fun addChains(): List<Entity> {
-        val chain1 = addChain(auxVector1.set(MAP_SIZE/2F, 1F, MAP_SIZE/2F))
-        val chain2 = addChain(auxVector1.set(MAP_SIZE/2F, 1F, MAP_SIZE/2F))
-        val chain3 = addChain(auxVector1.set(MAP_SIZE/2F, 1F, MAP_SIZE/2F))
-        val chain4 = addChain(auxVector1.set(MAP_SIZE/2F, 1F, MAP_SIZE/2F))
-        val chain5 = addChain(auxVector1.set(MAP_SIZE/2F, 1F, MAP_SIZE/2F))
-        val chain6 = addChain(auxVector1.set(MAP_SIZE/2F, 1F, MAP_SIZE/2F))
-        val chain7 = addChain(auxVector1.set(MAP_SIZE/2F, 1F, MAP_SIZE/2F))
+        val chain1 = addChain(auxVector1.set(MAP_SIZE / 2F, 1F, MAP_SIZE / 2F))
+        val chain2 = addChain(auxVector1.set(MAP_SIZE / 2F, 1F, MAP_SIZE / 2F))
+        val chain3 = addChain(auxVector1.set(MAP_SIZE / 2F, 1F, MAP_SIZE / 2F))
+        val chain4 = addChain(auxVector1.set(MAP_SIZE / 2F, 1F, MAP_SIZE / 2F))
+        val chain5 = addChain(auxVector1.set(MAP_SIZE / 2F, 1F, MAP_SIZE / 2F))
+        val chain6 = addChain(auxVector1.set(MAP_SIZE / 2F, 1F, MAP_SIZE / 2F))
+        val chain7 = addChain(auxVector1.set(MAP_SIZE / 2F, 1F, MAP_SIZE / 2F))
         return listOf(chain1, chain2, chain3, chain4, chain5, chain6, chain7)
     }
 
@@ -73,7 +73,7 @@ class PlayerSystem : GameEntitySystem<PlayerSystemEventsSubscriber>(),
         val modelInstance = ModelInstance(assetsManager.getAssetByDefinition(BALL))
         val ball = EntityBuilder.begin().addModelInstanceComponent(
             modelInstance,
-            auxVector1.set(MAP_SIZE/2F, 1F, MAP_SIZE/2F)
+            auxVector1.set(MAP_SIZE / 2F, 1F, MAP_SIZE / 2F)
         ).addPhysicsComponent(
             btSphereShape(BALL_RADIUS),
             modelInstance.transform,
@@ -114,9 +114,9 @@ class PlayerSystem : GameEntitySystem<PlayerSystemEventsSubscriber>(),
             .addModelInstanceComponent(
                 modelInstance,
                 auxVector1.set(
-                    MAP_SIZE/2F - CRANE_MODEL_OFFSET_X,
+                    MAP_SIZE / 2F - CRANE_MODEL_OFFSET_X,
                     CRANE_MODEL_OFFSET_Y,
-                    MAP_SIZE/2F
+                    MAP_SIZE / 2F
                 )
             )
             .addPhysicsComponent(collisionShape, modelInstance.transform)
@@ -150,14 +150,14 @@ class PlayerSystem : GameEntitySystem<PlayerSystemEventsSubscriber>(),
     private fun addPlayerBody() {
         player = EntityBuilder.begin().addModelInstanceComponent(
             assetsManager.getAssetByDefinition(BODY),
-            auxVector1.set(MAP_SIZE/2F, BODY_OFFSET_Y, MAP_SIZE/2F)
+            auxVector1.set(MAP_SIZE / 2F, BODY_OFFSET_Y, MAP_SIZE / 2F)
         ).finishAndAddToEngine()
     }
 
     private fun addPlayerWheels() {
         EntityBuilder.begin().addModelInstanceComponent(
             assetsManager.getAssetByDefinition(CRANE_WHEELS),
-            auxVector1.set(MAP_SIZE/2F, WHEELS_OFFSET_Y, MAP_SIZE/2F)
+            auxVector1.set(MAP_SIZE / 2F, WHEELS_OFFSET_Y, MAP_SIZE / 2F)
         ).finishAndAddToEngine()
     }
 
@@ -197,9 +197,9 @@ class PlayerSystem : GameEntitySystem<PlayerSystemEventsSubscriber>(),
         if (DefaultGameSettings.DEBUG_INPUT) return false
         calculateCraneRotation(screenX, screenY)
         ComponentsMapper.modelInstance.get(crane).modelInstance.transform.trn(
-            MAP_SIZE/2F + -CRANE_MODEL_OFFSET_X * MathUtils.cosDeg(craneRot.x),
+            MAP_SIZE / 2F + -CRANE_MODEL_OFFSET_X * MathUtils.cosDeg(craneRot.x),
             CRANE_MODEL_OFFSET_Y,
-            MAP_SIZE/2F + CRANE_MODEL_OFFSET_X * MathUtils.sinDeg(craneRot.x)
+            MAP_SIZE / 2F + CRANE_MODEL_OFFSET_X * MathUtils.sinDeg(craneRot.x)
         )
         prevTouchPos.set(screenX.toFloat(), screenY.toFloat())
         return true

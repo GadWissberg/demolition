@@ -8,7 +8,7 @@ import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape
-import com.gadarts.demolition.core.components.CarComponent
+import com.gadarts.demolition.core.components.AnimationControllerComponent
 import com.gadarts.demolition.core.components.ModelInstanceComponent
 import com.gadarts.demolition.core.components.PhysicsComponent
 
@@ -53,8 +53,11 @@ class EntityBuilder private constructor() {
         return instance
     }
 
-    fun addCarComponent(): EntityBuilder {
-        val component = engine.createComponent(CarComponent::class.java)
+    fun addAnimationControllerComponent(
+        modelInstance: ModelInstance,
+    ): EntityBuilder {
+        val component = engine.createComponent(AnimationControllerComponent::class.java)
+        component.init(modelInstance)
         entity!!.add(component)
         return instance
     }
