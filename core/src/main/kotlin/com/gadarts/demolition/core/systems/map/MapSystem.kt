@@ -13,6 +13,8 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.collision.BoundingBox
+import com.badlogic.gdx.physics.bullet.collision.btBoxShape
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape
 import com.badlogic.gdx.physics.bullet.collision.btCompoundShape
 import com.badlogic.gdx.physics.bullet.collision.btStaticPlaneShape
@@ -59,6 +61,14 @@ class MapSystem : GameEntitySystem<MapSystemEventsSubscriber>() {
     private fun addRail() {
         val model = assetsManager.getAssetByDefinition(ModelsDefinitions.RAIL)
         val modelInstance = ModelInstance(model)
+        val boundingBox = modelInstance.calculateBoundingBox(BoundingBox())
+        val collisionShape = btBoxShape(
+            Vector3(
+                boundingBox.width / 2F,
+                boundingBox.height / 2F,
+                boundingBox.depth / 2F
+            )
+        )
 
         EntityBuilder.begin()
             .addModelInstanceComponent(
@@ -66,6 +76,7 @@ class MapSystem : GameEntitySystem<MapSystemEventsSubscriber>() {
                 auxVector1.set(MAP_SIZE / 2F + RAIL_X_OFFSET, RAIL_Y_OFFSET, MAP_SIZE / 2F)
             )
             .addAnimationControllerComponent(modelInstance)
+            .addPhysicsComponent(collisionShape, Matrix4().set(modelInstance.transform))
             .finishAndAddToEngine()
     }
 

@@ -53,8 +53,8 @@ class CameraSystem : GameEntitySystem<CameraSystemEventsSubscriber>() {
         private val auxVector = Vector3()
         private const val NEAR = 0.1F
         private const val FAR = 300F
-        private const val INITIAL_Y = 3F
-        private const val INITIAL_X = MAP_SIZE / 2F + 5F
+        private const val INITIAL_Y = 3.5F
+        private const val INITIAL_X = MAP_SIZE / 2F + 5.5F
         private const val INITIAL_Z = MAP_SIZE / 2F
     }
 
